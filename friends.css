@@ -1,0 +1,207 @@
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: linear-gradient(to bottom, #e7c587, #db976a, #c84848);
+  height: 100vh;
+  font-size: 12px;
+  display: flex;
+  font-size: 18px; 
+}
+
+.container {
+  display: flex;
+  width: 100%;
+}
+
+.icon-bar {
+  width: 120px;
+  background: #3c2b23;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 0;
+  align-items: center;
+}
+
+.icon-bar img {
+  width: 58px;
+  height: 58px;
+  margin: 12px 20px;
+  cursor: pointer;
+}
+
+.icons-bottom img {
+  margin-bottom: 10px;
+}
+
+.sidebar {
+  width: 220px;
+  background: rgba(167, 101, 84, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 15px;
+  color: #ffd9ba;
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin: 0 0 15px;
+  font-size: 22px; 
+}
+
+.sidebar span{
+  font-size: 30px; 
+  text-align: center;
+}
+
+.dm-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.dm img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  background: #d9d9d9;
+  border-radius: 20px;
+  padding: 8px 12px;
+  color: #000;
+}
+
+.user img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #83884e;
+  border-radius: 9px;
+  padding: 12px 20px;
+  color: #ffd9ba;
+}
+
+.main-header .logo {
+  width: 30px;
+  height: 30px;
+}
+
+.add-friend {
+  padding: 12px 12px;
+  border: none;
+  border-radius: 10px;
+  background: #f2b48e;
+  cursor: pointer;
+  font-size: 28px;
+}
+
+.add-friend:hover {
+  background: #e09c74;
+}
+
+/* Friends list */
+.friends-container {
+  flex: 1;
+  margin-top: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.friend-card {
+  background-color: #d3d3d3; 
+  border-radius: 8px;
+  margin: 10px 0; 
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+.friend-card img {
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+}
+
+.friend-card span {
+  flex: 1;
+  font-size: 30px;
+}
+
+.chat-btn,
+.options-btn {
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  background: #fff;
+  margin-left: 6px;
+}
+
+.chat-btn:hover,
+.options-btn:hover {
+  background: #ccc;
+}
+
+.icon-circle {
+  width: 80px;               
+  height: 80px;
+  border-radius: 50%;        
+  background-color: #ffd9ba; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 20px;
+  cursor: pointer;
+}
+
+.icon-circle:hover {
+  background-color: #7a5c4a; 
+}
+
+.icon-circle img {
+  width: 32px;   
+  height: 32px;
+}
+
+.friend-card span,
+.dm span,
+.user span {
+  text-align: center;
+}
+
+.main-header .logo {
+  width: 70px;  
+  height: 70px;
+}
