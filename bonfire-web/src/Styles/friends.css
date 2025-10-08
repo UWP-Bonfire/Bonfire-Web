@@ -1,40 +1,53 @@
 
-.container {
-  background: linear-gradient(
-    180deg,
-    rgba(231, 197, 134, 0.93) 5%,
-    #db976a 48%,
-    rgba(200, 72, 72, 0.67) 89%
-  );
-  display: flex;
+body {
+  margin: 0;
+  font-family: "Jeju Hallasan", sans-serif;
+  background: #fff;
 }
 
+.container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
+/* Left Vertical Icon Bar*/
 .icon-bar {
+  width: 80px;
   background: #3c2b23;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 24px 0;
   align-items: center;
+  padding: 24px 0;
+  flex-shrink: 0;
 }
 
-
-.icon-bar img {
-  width: 58px;
-  height: 58px;
-  margin: 12px 20px;
+.icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #ffd9ba;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
-
-.icons-bottom img {
-  margin-bottom: 10px;
+.icon-circle:hover {
+  background-color: #7a5c4a;
 }
 
+.icon-circle img {
+  width: 20px;
+  height: 20px;
+}
 
+/*  Sidebar (Direct Messages)  */
 .sidebar {
-  width: 240px;
+  width: 220px;
   background: rgba(167, 101, 84, 0.9);
   display: flex;
   flex-direction: column;
@@ -44,42 +57,51 @@
   flex-shrink: 0;
 }
 
-
 .sidebar h2 {
   text-align: center;
   margin: 0 0 15px;
-  font-size: 22px; 
-}
-
-.sidebar span{
-  font-size: 30px; 
-  text-align: center;
+  font-size: 20px;
 }
 
 .dm-list {
   flex: 1;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .dm {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dm:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 4px;
 }
 
 .dm img {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
 }
 
+.dm span {
+  font-size: 16px;
+  color: #fff;
+}
+
+/* Bottom user section */
 .user {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 18px;
+  font-size: 16px;
   background: #d9d9d9;
   border-radius: 20px;
   padding: 8px 12px;
@@ -92,35 +114,22 @@
   border-radius: 50%;
 }
 
+/* Main Content Area */
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 20px;
+  overflow-y: auto;
+  background: linear-gradient(
+    180deg,
+    rgba(231, 197, 134, 0.93) 5%,
+    #db976a 48%,
+    rgba(200, 72, 72, 0.67) 89%
+  );
 }
 
-/* Top navigation styling (App-level nav) */
-nav {
-  background: rgba(0,0,0,0.08);
-  padding: 10px 16px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-nav a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  background: rgba(0,0,0,0.2);
-  padding: 6px 10px;
-  border-radius: 6px;
-}
-
-nav a:hover {
-  background: rgba(0,0,0,0.32);
-}
-
+/*  Main Header*/
 .main-header {
   display: flex;
   align-items: center;
@@ -132,24 +141,26 @@ nav a:hover {
 }
 
 .main-header .logo {
-  width: 30px;
-  height: 30px;
+  width: 70px;
+  height: 70px;
 }
 
 .add-friend {
-  padding: 12px 12px;
+  padding: 8px 12px;
   border: none;
   border-radius: 10px;
   background: #f2b48e;
   cursor: pointer;
-  font-size: 28px;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background 0.2s;
 }
 
 .add-friend:hover {
   background: #e09c74;
 }
 
-/* Friends list */
+/* Friends List */
 .friends-container {
   flex: 1;
   margin-top: 20px;
@@ -160,15 +171,18 @@ nav a:hover {
 }
 
 .friend-card {
-  background-color: #d3d3d3; 
+  background-color: #d3d3d3;
   border-radius: 8px;
-  margin: 10px 0; 
   padding: 15px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transition: transform 0.15s ease-in-out;
 }
 
+.friend-card:hover {
+  transform: translateY(-2px);
+}
 
 .friend-card img {
   width: 85px;
@@ -178,19 +192,23 @@ nav a:hover {
 
 .friend-card span {
   flex: 1;
-  font-size: 30px;
+  font-size: 22px;
+  color: #333;
+  margin-left: 10px;
 }
 
-
+/* Buttons on friend cards */
 .chat-btn,
 .options-btn {
   border: none;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  width: 42px;
+  height: 42px;
   cursor: pointer;
   background: #fff;
   margin-left: 6px;
+  font-size: 20px;
+  transition: background 0.2s;
 }
 
 .chat-btn:hover,
@@ -198,34 +216,4 @@ nav a:hover {
   background: #ccc;
 }
 
-.icon-circle {
-  width: 80px;               
-  height: 80px;
-  border-radius: 50%;        
-  background-color: #ffd9ba; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 12px 20px;
-  cursor: pointer;
-}
 
-.icon-circle:hover {
-  background-color: #7a5c4a; 
-}
-
-.icon-circle img {
-  width: 32px;   
-  height: 32px;
-}
-
-.friend-card span,
-.dm span,
-.user span {
-  text-align: center;
-}
-
-.main-header .logo {
-  width: 70px;  
-  height: 70px;
-}
