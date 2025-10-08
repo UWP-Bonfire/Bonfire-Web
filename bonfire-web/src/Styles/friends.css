@@ -1,27 +1,24 @@
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background: linear-gradient(to bottom, #e7c587, #db976a, #c84848);
-  height: 100vh;
-  font-size: 12px;
-  display: flex;
-  font-size: 18px; 
-}
 
 .container {
+  background: linear-gradient(
+    180deg,
+    rgba(231, 197, 134, 0.93) 5%,
+    #db976a 48%,
+    rgba(200, 72, 72, 0.67) 89%
+  );
   display: flex;
-  width: 100%;
 }
 
+
 .icon-bar {
-  width: 120px;
   background: #3c2b23;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 40px 0;
+  padding: 24px 0;
   align-items: center;
 }
+
 
 .icon-bar img {
   width: 58px;
@@ -30,19 +27,23 @@ body {
   cursor: pointer;
 }
 
+
 .icons-bottom img {
   margin-bottom: 10px;
 }
 
+
 .sidebar {
-  width: 220px;
+  width: 240px;
   background: rgba(167, 101, 84, 0.9);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 15px;
   color: #ffd9ba;
+  flex-shrink: 0;
 }
+
 
 .sidebar h2 {
   text-align: center;
@@ -96,6 +97,28 @@ body {
   display: flex;
   flex-direction: column;
   padding: 20px;
+}
+
+/* Top navigation styling (App-level nav) */
+nav {
+  background: rgba(0,0,0,0.08);
+  padding: 10px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  background: rgba(0,0,0,0.2);
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+nav a:hover {
+  background: rgba(0,0,0,0.32);
 }
 
 .main-header {
@@ -157,6 +180,7 @@ body {
   flex: 1;
   font-size: 30px;
 }
+
 
 .chat-btn,
 .options-btn {
