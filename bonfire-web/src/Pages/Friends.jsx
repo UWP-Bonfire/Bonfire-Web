@@ -1,7 +1,20 @@
 import React from "react";
+import { useNavigate } from "react-router-dom"; 
 import "../Styles/friends.css";
 
 export default function Friends() {
+  const navigate = useNavigate(); 
+
+  const friends = [
+    { name: "friend1", img: "/images/3d_avatar_1.png" },
+    { name: "friend2", img: "/images/3d_avatar_13.png" },
+    { name: "friend3", img: "/images/3d_avatar_16.png" }
+  ];
+
+  const goToFriend1Messages = () => {
+    navigate("/messages", { state: { friend: "friend1", img: "/images/3d_avatar_1.png" } });
+  };
+
   return (
     <div className="container">
       {/* Left vertical icon bar */}
@@ -21,10 +34,13 @@ export default function Friends() {
       <div className="sidebar">
         <h2>Direct Messages</h2>
         <div className="dm-list">
-          <div className="dm">
+          {/* ✅ Friend1 clickable */}
+          <div className="dm" onClick={goToFriend1Messages} role="button">
             <img src="/images/3d_avatar_1.png" alt="friend1" />
             <span>friend1</span>
           </div>
+
+          {/* Other friends not clickable */}
           <div className="dm">
             <img src="/images/3d_avatar_13.png" alt="friend2" />
             <span>friend2</span>
@@ -34,6 +50,7 @@ export default function Friends() {
             <span>friend3</span>
           </div>
         </div>
+
         <div className="user">
           <img src="/icons/User.svg" alt="User" />
           <span>User123</span>
@@ -49,24 +66,30 @@ export default function Friends() {
         </div>
 
         <div className="friends-container">
-          <div className="friend-card">
-            <img src="/images/3d_avatar_1.png" alt="friend1" />
-            <span>friend1</span>
-            <button className="chat-btn" aria-label="Chat with friend1">💬</button>
-            <button className="options-btn" aria-label="Options for friend1">⋮</button>
-          </div>
-          <div className="friend-card">
-            <img src="/images/3d_avatar_13.png" alt="friend2" />
-            <span>friend2</span>
-            <button className="chat-btn" aria-label="Chat with friend2">💬</button>
-            <button className="options-btn" aria-label="Options for friend2">⋮</button>
-          </div>
-          <div className="friend-card">
-            <img src="/images/3d_avatar_16.png" alt="friend3" />
-            <span>friend3</span>
-            <button className="chat-btn" aria-label="Chat with friend3">💬</button>
-            <button className="options-btn" aria-label="Options for friend3">⋮</button>
-          </div>
+          {friends.map((f) => (
+            <div className="friend-card" key={f.name}>
+              <img src={f.img} alt={f.name} />
+              <span>{f.name}</span>
+
+              {/* ✅ Only friend1 navigates to Messages */}
+              <button
+                className="chat-btn"
+                aria-label={`Chat with ${f.name}`}
+                onClick={() => {
+                  if (f.name === "friend1") goToFriend1Messages();
+                }}
+              >
+                💬
+              </button>
+
+              <button
+                className="options-btn"
+                aria-label={`Options for ${f.name}`}
+              >
+                ⋮
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
