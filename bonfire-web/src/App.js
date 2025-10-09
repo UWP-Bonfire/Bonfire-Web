@@ -1,14 +1,16 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Friends from "./Pages/Friends";
 import Messages from "./Pages/Messages";
 import Login from "./Pages/Login";
 import Signin from "./Pages/Signin";
+import Welcome from "./Pages/Welcome";
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Default route now goes to Welcome */}
+        <Route path="/" element={<Welcome />} />
 
         <Route path="/friends" element={<Friends />} />
         <Route path="/messages" element={<Messages />} />
@@ -20,4 +22,3 @@ function App() {
 }
 
 export default App;
-
