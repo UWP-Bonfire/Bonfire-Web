@@ -32,7 +32,7 @@ export default function Messages() {
           </div>
           <div className="dm">
             <img src="/images/3d_avatar_16.png" alt="friend3" />
-            <span>friend3</span>
+            <span>group chat 1</span>git
           </div>
         </div>
         </div>
