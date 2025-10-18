@@ -13,7 +13,7 @@ export default function Friends() {
 
   return (
     <div className="container">
-      {/* Sidebar (Direct Messages Only) */}
+      {/* Sidebar */}
       <div className="sidebar">
         <h2>Direct Messages</h2>
 
@@ -22,7 +22,7 @@ export default function Friends() {
             <div
               className="dm"
               key={index}
-              onClick={() => navigate("/messages")} // 👈 goes to messages page
+              onClick={() => navigate("/messages")}
             >
               <img src={friend.img} alt={friend.name} />
               <span>{friend.name}</span>
@@ -34,7 +34,8 @@ export default function Friends() {
           <div className="settings-btn" onClick={() => navigate("/settings")}>
             <img src="/icons/Settings.svg" alt="Settings" />
           </div>
-          <div className="user" onClick={() => navigate("/profile")}>
+
+          <div className="user" onClick={() => navigate("/personalization")}>
             <img src="/icons/User.svg" alt="User" />
             <span>User123</span>
           </div>
@@ -45,7 +46,7 @@ export default function Friends() {
       <div className="main">
         <div className="main-header">
           <h1>Friends Page</h1>
-          <button className="add-friend" onClick={() => navigate("/signin")}>
+          <button className="add-friend" onClick={() => navigate("/add-friends")}>
             Add Friend
           </button>
         </div>
