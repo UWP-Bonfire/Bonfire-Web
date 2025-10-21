@@ -21,9 +21,7 @@ export default function Friends() {
           {friends.map((friend, index) => (
             <div
               className="dm"
-              key={index}
-              onClick={() => navigate("/messages")}
-            >
+              key={index} onClick={() => navigate("/messages")}>
               <img src={friend.img} alt={friend.name} />
               <span>{friend.name}</span>
             </div>
@@ -33,8 +31,6 @@ export default function Friends() {
         <div className="bottom-section">
           <div className="user" onClick={() => navigate("/account")}>
             <img src="/icons/User.svg" alt="User" />
-            </div>
-
             <span>User123</span>
           </div>
         </div>
@@ -44,7 +40,6 @@ export default function Friends() {
       <div className="main">
         <div className="main-header">
           <h1>Friends Page</h1>
-      
           <button className="add-friend" onClick={() => navigate("/addfriends")}>
             Add Friend
           </button>
