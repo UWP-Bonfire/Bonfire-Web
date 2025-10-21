@@ -45,7 +45,8 @@ export default function Friends() {
       <div className="main">
         <div className="main-header">
           <h1>Friends Page</h1>
-          <button className="add-friend" onClick={() => navigate("/signin")}>
+          {/* ✅ Changed route to /addfriends */}
+          <button className="add-friend" onClick={() => navigate("/addfriends")}>
             Add Friend
           </button>
         </div>
