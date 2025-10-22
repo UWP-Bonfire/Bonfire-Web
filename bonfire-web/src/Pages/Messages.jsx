@@ -13,12 +13,11 @@ export default function Messages() {
     <div className="messages-container">
       {/* Sidebar */}
       <aside className="sidebar">
-  <div className="sidebar-header">
-    <button className="back-btn" onClick={handleBack} aria-label="Go back">
-      <img src="/images/right-arrow.png" alt="Back" />
-    </button>
-    <h2>Messages</h2>
-  </div>
+ <div className="sidebar-header">
+  <h2>Messages</h2>
+</div>
+
+
 
         <div className="sidebar-icons">
          <div className="dm-list">
@@ -42,13 +41,18 @@ export default function Messages() {
       {/* Chat Section */}
       <main className="chat-area">
         <div className="chat-header">
-          <img
-            src="Profile Images/IMG_1843.png"
-            alt="friend1"
-            className="chat-header-avatar"
-          />
-          <span>Chat with Friend</span>
-        </div>
+  <img
+    src="Profile Images/IMG_1843.png"
+    alt="friend1"
+    className="chat-header-avatar"
+  />
+  <span>Chat with Friend</span>
+
+  <button className="back-btn" onClick={handleBack} aria-label="Go back">
+    <img src="/images/right-arrow.png" alt="Back" />
+  </button>
+</div>
+
 
         {/* Chat Body */}
         <div className="chat-body">
