@@ -7,15 +7,14 @@ import Welcome from "./Pages/Welcome";
 import AddFriends from "./Pages/AddFriends"; 
 import Account from "./Pages/Account";
 
+import Personalization from "./Pages/Personalization";
 
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Default route now goes to Welcome */}
         <Route path="/" element={<Welcome />} />
-
         <Route path="/friends" element={<Friends />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/login" element={<Login />} />
@@ -23,9 +22,10 @@ function App() {
         <Route path="/addfriends" element={<AddFriends />} /> 
         <Route path="/account" element={<Account />} />
 
+        <Route path="/personalization" element={<Personalization />} />
       </Routes>
     </Router>
   );
 }
 
-export default App;
+export default App; 
