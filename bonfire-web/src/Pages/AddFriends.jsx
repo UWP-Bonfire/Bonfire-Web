@@ -4,59 +4,80 @@ import "../Styles/addfriends.css";
 
 export default function AddFriends() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [friends, setFriends] = useState([
-    { name: "User1", img: "Profile Images/IMG_1843.png", added: false },
-    { name: "User2", img: "Profile Images/IMG_1845.png", added: false },
-    { name: "User3", img: "Profile Images/IMG_1848.png", added: false },
-    { name: "User4", img: "Profile Images/IMG_1851.png", added: false },
-  ]);
 
-  const handleAdd = (index) => {
-    const updated = [...friends];
-    updated[index].added = true;
-    setFriends(updated);
-  };
+   const allFriends = [
+    { name: "Emma Frost", img: "/images/3d_avatar_1.png" },
+    { name: "Luna Snow", img: "/images/3d_avatar_13.png" },
+    { name: "Hank Pim", img: "/images/3d_avatar_16.png" },
+    { name: "Peter Parker", img: "/images/3d_avatar_2.png" },
+    { name: "Iron Fist", img: "/images/3d_avatar_5.png" },
+  ];
 
-  const filteredFriends = friends.filter((f) =>
-    f.name.toLowerCase().includes(search.toLowerCase())
+  const [query, setQuery] = useState("");
+  const [added, setAdded] = useState([]);
+
+  // Filter results when typing
+  const filteredFriends = allFriends.filter(
+    (friend) =>
+      query.length > 0 &&
+      friend.name.toLowerCase().includes(query.toLowerCase())
   );
+
+  const handleAdd = (name) => {
+    // toggle add/added state
+    if (!added.includes(name)) {
+      setAdded([...added, name]);
+    } else {
+      setAdded(added.filter((f) => f !== name));
+    }
+  };
 
   return (
     <div className="addfriends-container">
-      <h1 className="page-title">Add New Friends 🔥</h1>
+      <h1 className="page-title">Add Friends</h1>
 
-      {/* Search bar */}
+      {/* Search input */}
       <div className="search-bar">
         <input
           type="text"
-          placeholder="Search by username..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search for a friend..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
         />
       </div>
 
-      {/* Friends List */}
+      {/* Results list */}
       <div className="friends-list">
-        {filteredFriends.map((friend, index) => (
-          <div key={index} className="friend-card">
-            <img src={friend.img} alt={friend.name} className="friend-avatar" />
-            <span className="friend-name">{friend.name}</span>
-            {friend.added ? (
-              <button className="added-btn" disabled>✓ Added</button>
-            ) : (
-              <button
-                className="add-btn"
-                onClick={() => handleAdd(index)}
-              >
-                + Add
-              </button>
-            )}
-          </div>
-        ))}
-
-        {filteredFriends.length === 0 && (
-          <p className="no-results">No users found...</p>
+        {filteredFriends.length > 0 ? (
+          filteredFriends.map((friend, index) => (
+            <div className="friend-card" key={index}>
+              <img
+                src={friend.img}
+                alt={friend.name}
+                className="friend-avatar"
+              />
+              <span className="friend-name">{friend.name}</span>
+              {added.includes(friend.name) ? (
+                <button
+                  className="added-btn"
+                  onClick={() => handleAdd(friend.name)}
+                >
+                  Added
+                </button>
+              ) : (
+                <button
+                  className="add-btn"
+                  onClick={() => handleAdd(friend.name)}
+                >
+                  Add
+                </button>
+              )}
+            </div>
+          ))
+        ) : query.length > 0 ? (
+          <p className="no-results">No friends found 😔</p>
+        ) : (
+          <p className="no-results">Start typing to find friends!</p>
         )}
       </div>
 
