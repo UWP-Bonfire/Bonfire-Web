@@ -4,7 +4,11 @@ import Messages from "./Pages/Messages";
 import Login from "./Pages/Login";
 import Signin from "./Pages/Signin";
 import Welcome from "./Pages/Welcome";
+import AddFriends from "./Pages/AddFriends"; 
+import Account from "./Pages/Account";
+
 import Personalization from "./Pages/Personalization";
+
 
 function App() {
   return (
@@ -15,6 +19,9 @@ function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signin" element={<Signin />} />
+        <Route path="/addfriends" element={<AddFriends />} /> 
+        <Route path="/account" element={<Account />} />
+
         <Route path="/personalization" element={<Personalization />} />
       </Routes>
     </Router>
