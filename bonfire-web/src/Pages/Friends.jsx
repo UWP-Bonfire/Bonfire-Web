@@ -21,7 +21,9 @@ export default function Friends() {
           {friends.map((friend, index) => (
             <div
               className="dm"
-              key={index} onClick={() => navigate("/messages")}>
+              key={index}
+              onClick={() => navigate("/messages")}
+            >
               <img src={friend.img} alt={friend.name} />
               <span>{friend.name}</span>
             </div>
@@ -29,8 +31,10 @@ export default function Friends() {
         </div>
 
         <div className="bottom-section">
-          <div className="user" onClick={() => navigate("/personalization")}>
-            <img src="images/bonfire.png" alt="User" />
+          <div className="user" onClick={() => navigate("/account")}>
+            <img src="/icons/Settings.svg" alt="Settings" />
+          </div>
+
           <div className="user" onClick={() => navigate("/account")}>
             <img src="/icons/User.svg" alt="User" />
             <span>User123</span>
@@ -52,7 +56,10 @@ export default function Friends() {
             <div className="friend-card" key={index}>
               <img src={friend.img} alt={friend.name} />
               <span>{friend.name}</span>
-              <button className="chat-btn" onClick={() => navigate("/messages")}>
+              <button
+                className="chat-btn"
+                onClick={() => navigate("/messages")}
+              >
                 💬
               </button>
               <button className="options-btn">⋮</button>
