@@ -2,19 +2,30 @@ import React, { useState } from "react";
 import "../Styles/personalization.css";
 
 export default function Personalization() {
-  const [displayName, setDisplayName] = useState("User123");
+  const [displayName, setDisplayName] = useState("User12");
   const [bio, setBio] = useState("Welcome to Bonfire!");
-  const [avatar, setAvatar] = useState("/images/3d_avatar_1.png");
+  const [avatar, setAvatar] = useState("/Profile Images/IMG_1843.png");
   const [usernameColor, setUsernameColor] = useState("#c84848");
   const [bgColor, setBgColor] = useState("#ffd9ba");
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setAvatar(imageUrl);
-    }
-  };
+   const presetAvatars = [
+    "Profile Images/IMG_1843.png",
+    "Profile Images/IMG_1844.png",
+    "Profile Images/IMG_1845.png",
+    "Profile Images/IMG_1846.png",
+    "Profile Images/IMG_1847.png",
+    "Profile Images/IMG_1848.png",
+    "Profile Images/IMG_1849.png",
+    "Profile Images/IMG_1850.png",
+    "Profile Images/IMG_1851.png",
+    "Profile Images/IMG_1852.png",
+    "Profile Images/IMG_1853.png",
+    "Profile Images/IMG_1854.png",
+    "Profile Images/IMG_1855.png",
+    "Profile Images/IMG_1856.png",
+    "Profile Images/IMG_1857.png",
+  ];
+
 
   const handleSave = () => {
     alert(`Saved customizations for ${displayName}!`);
@@ -24,18 +35,34 @@ export default function Personalization() {
     <div className="personalization-container">
       <h1 className="personalization-title">Account Personalization</h1>
 
+      {/* ✅ Profile Card Preview (now at the top) */}
+      <div className="top-preview-card" style={{ backgroundColor: bgColor }}>
+        <img src={avatar} alt="Avatar" className="top-avatar" />
+        <h3 style={{ color: usernameColor }}>{displayName}</h3>
+        <p>{bio}</p>
+      </div>
+
+      {/* Settings below */}
       <div className="personalization-card">
+        {/* Profile Picture Selection */}
         <div className="section">
-          <h2>Profile Picture</h2>
-          <img src={avatar} alt="Avatar" className="avatar-preview" />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarChange}
-            className="upload-input"
-          />
+          <h2>Choose Your Profile Picture</h2>
+          <div className="avatar-options">
+            {presetAvatars.map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt={`Avatar ${index + 1}`}
+                className={`avatar-choice ${
+                  avatar === img ? "selected-avatar" : ""
+                }`}
+                onClick={() => setAvatar(img)}
+              />
+            ))}
+          </div>
         </div>
 
+        {/* Display Name */}
         <div className="section">
           <h2>Display Name</h2>
           <input
@@ -46,6 +73,7 @@ export default function Personalization() {
           />
         </div>
 
+        {/* Username Color */}
         <div className="section">
           <h2>Username Color</h2>
           <input
@@ -55,6 +83,7 @@ export default function Personalization() {
           />
         </div>
 
+        {/* Background Color */}
         <div className="section">
           <h2>Profile Background Color</h2>
           <input
@@ -64,6 +93,7 @@ export default function Personalization() {
           />
         </div>
 
+        {/* Bio */}
         <div className="section">
           <h2>Bio</h2>
           <textarea
@@ -76,12 +106,6 @@ export default function Personalization() {
         <button className="save-btn" onClick={handleSave}>
           Save Changes
         </button>
-      </div>
-
-      <div className="preview-card" style={{ backgroundColor: bgColor }}>
-        <img src={avatar} alt="Preview Avatar" className="preview-avatar" />
-        <h3 style={{ color: usernameColor }}>{displayName}</h3>
-        <p>{bio}</p>
       </div>
     </div>
   );
