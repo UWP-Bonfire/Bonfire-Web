@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Bonfire-Web/static/css/main.ae297eae.css",
+    "main.js": "/Bonfire-Web/static/js/main.ef002929.js",
+    "index.html": "/Bonfire-Web/index.html",
+    "main.ae297eae.css.map": "/Bonfire-Web/static/css/main.ae297eae.css.map",
+    "main.ef002929.js.map": "/Bonfire-Web/static/js/main.ef002929.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ae297eae.css",
+    "static/js/main.ef002929.js"
+  ]
+}
