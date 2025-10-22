@@ -88,6 +88,7 @@ export default function Personalization() {
           <h2>Profile Background Color</h2>
           <input
             type="color"
+            size = ""
             value={bgColor}
             onChange={(e) => setBgColor(e.target.value)}
           />
