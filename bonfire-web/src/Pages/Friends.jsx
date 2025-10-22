@@ -31,9 +31,10 @@ export default function Friends() {
         </div>
 
         <div className="bottom-section">
-          <div className="settings-btn" onClick={() => navigate("/settings")}>
+          <div className="settings-btn" onClick={() => navigate("/account")}>
             <img src="/icons/Settings.svg" alt="Settings" />
-          </div>
+            </div>
+
           <div className="user" onClick={() => navigate("/profile")}>
             <img src="/icons/User.svg" alt="User" />
             <span>User123</span>
