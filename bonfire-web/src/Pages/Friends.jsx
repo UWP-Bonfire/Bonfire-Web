@@ -31,10 +31,9 @@ export default function Friends() {
         </div>
 
         <div className="bottom-section">
-          <div className="user" onClick={() => navigate("/account")}>
-            <img src="/icons/Settings.svg" alt="Settings" />
+          <div className="user" onClick={() => navigate("/personalization")}>
+            <img src="icons/setting.svg" alt="Settings" />
           </div>
-
           <div className="user" onClick={() => navigate("/account")}>
             <img src="/icons/User.svg" alt="User" />
             <span>User123</span>
@@ -46,7 +45,10 @@ export default function Friends() {
       <div className="main">
         <div className="main-header">
           <h1>Friends Page</h1>
-          <button className="add-friend" onClick={() => navigate("/addfriends")}>
+          <button
+            className="add-friend"
+            onClick={() => navigate("/addfriends")}
+          >
             Add Friend
           </button>
         </div>
@@ -70,3 +72,4 @@ export default function Friends() {
     </div>
   );
 }
+
