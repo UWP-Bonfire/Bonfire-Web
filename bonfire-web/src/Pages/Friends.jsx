@@ -6,9 +6,9 @@ export default function Friends() {
   const navigate = useNavigate();
 
   const friends = [
-    { name: "friend1", img: "/images/3d_avatar_1.png" },
-    { name: "friend2", img: "/images/3d_avatar_13.png" },
-    { name: "friend3", img: "/images/3d_avatar_16.png" },
+    { name: "friend1", img: "Profile Images/IMG_1843.png" },
+    { name: "friend2", img: "Profile Images/IMG_1844.png" },
+    { name: "friend3", img: "Profile Images/IMG_1845.png" },
   ];
 
   return (
@@ -29,6 +29,8 @@ export default function Friends() {
         </div>
 
         <div className="bottom-section">
+          <div className="user" onClick={() => navigate("/personalization")}>
+            <img src="images/bonfire.png" alt="User" />
           <div className="user" onClick={() => navigate("/account")}>
             <img src="/icons/User.svg" alt="User" />
             <span>User123</span>

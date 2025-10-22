@@ -23,15 +23,15 @@ export default function Messages() {
         <div className="sidebar-icons">
          <div className="dm-list">
           <div className="dm">
-            <img src="/images/3d_avatar_1.png" alt="friend1" />
+            <img src="Profile Images/IMG_1843.png" alt="friend1" />
             <span>friend1</span>
           </div>
           <div className="dm">
-            <img src="/images/3d_avatar_13.png" alt="friend2" />
+            <img src="Profile Images/IMG_1844.png" alt="friend2" />
             <span>friend2</span>
           </div>
           <div className="dm">
-            <img src="/images/3d_avatar_16.png" alt="friend3" />
+            <img src="Profile Images/IMG_1845.png" alt="friend3" />
             <span>friend3</span>
           </div>
         </div>
@@ -43,7 +43,7 @@ export default function Messages() {
       <main className="chat-area">
         <div className="chat-header">
           <img
-            src="/images/3d_avatar_1.png"
+            src="Profile Images/IMG_1843.png"
             alt="friend1"
             className="chat-header-avatar"
           />
@@ -55,7 +55,7 @@ export default function Messages() {
           {/* Received message */}
           <div className="message-row received">
             <img
-              src="/images/3d_avatar_1.png"
+              src="Profile Images/IMG_1843.png"
               alt="friend1"
               className="msg-avatar"
             />
@@ -68,7 +68,7 @@ export default function Messages() {
           {/* Sent message */}
           <div className="message-row sent">
             <img
-              src="/images/3d_avatar_16.png"
+              src="images/bonfire.png"
               alt="user"
               className="msg-avatar"
             />
