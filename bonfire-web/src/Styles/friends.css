@@ -161,6 +161,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
+  overflow-x: visible;
+  overflow-y: auto;
+  z-index: 1;
 }
 
 .friend-card {
@@ -172,10 +176,14 @@ body {
   align-items: center;
   justify-content: space-between;
   transition: transform 0.15s ease-in-out;
+  position: relative;
+  z-index: 1;
+  
 }
 
 .friend-card:hover {
   transform: translateY(-2px);
+   z-index: 1000;
 }
 
 .friend-card img {
@@ -210,4 +218,182 @@ body {
 .options-btn:hover {
   background: #ccc;
 }
+
+.dm-avatar {
+  position: relative;
+  display: inline-block;
+}
+
+.unread-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #ff3b3b;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.dm.unread {
+  background-color: rgba(255, 0, 0, 0.05);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notif-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.notif-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.notif-btn img {
+  width: 24px;
+  height: 24px;
+}
+
+/*  Red notification dot */
+.notif-dot {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  background-color: #ff3b3b;
+  border-radius: 50%;
+  border: 2px solid #fff8f3;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+/* notification dropdown */
+.notif-container {
+  position: relative;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background-color: #fff8f3;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 250px;
+  padding: 15px;
+  z-index: 10;
+  animation: fadeIn 0.25s ease;
+}
+
+.notif-dropdown h3 {
+  margin: 0 0 10px;
+  color: #3c2b23;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #d8bca7;
+  padding-bottom: 5px;
+}
+
+.notif-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notif-dropdown li {
+  padding: 8px 6px;
+  font-size: 0.95rem;
+  color: #3c2b23;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.notif-dropdown li:hover {
+  background-color: #f1d1b5;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Friend more options menu*/
+.options-wrapper {
+  position: relative;
+  display: inline-block;
+  z-index: 1500;
+}
+
+.context-menu {
+  position: absolute;
+  right: 0;
+  background: #fff8f3;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 9999;
+  pointer-events: auto;
+  top: 42px;
+}
+
+.options-wrapper:hover .context-menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.menu-item {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 10px 15px;
+  font-size: 0.95rem;
+  color: #3c2b23;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.menu-item:hover {
+  background-color: #f1d1b5;
+}
+
+.menu-item.danger {
+  color: #c84848;
+}
+
+.menu-item.danger:hover {
+  background-color: #f4b4b4;
+}
+
+
+.context-menu hr {
+  border: none;
+  border-top: 1px solid #d8bca7;
+  margin: 5px 0;
+  height: 0;
+  pointer-events: none;
+}
+
+
+
 
