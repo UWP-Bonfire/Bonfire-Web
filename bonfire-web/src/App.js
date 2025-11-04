@@ -6,6 +6,8 @@ import Signin from "./Pages/Signin";
 import Welcome from "./Pages/Welcome";
 import AddFriends from "./Pages/AddFriends"; 
 import Account from "./Pages/Account";
+import GroupChats from "./Pages/GroupChats";
+
 
 import Personalization from "./Pages/Personalization";
 
@@ -21,7 +23,7 @@ function App() {
         <Route path="/signin" element={<Signin />} />
         <Route path="/addfriends" element={<AddFriends />} /> 
         <Route path="/account" element={<Account />} />
-
+        <Route path="/groupchats" element={<GroupChats />} />
         <Route path="/personalization" element={<Personalization />} />
       </Routes>
     </Router>

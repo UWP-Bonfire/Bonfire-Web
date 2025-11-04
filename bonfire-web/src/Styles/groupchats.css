@@ -1,0 +1,365 @@
+
+.groupchats-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(to bottom, #e7c586, #db976a, #c84848);
+  overflow: hidden;
+  color: #3c2b23;
+}
+
+/* Sidebar */
+.groupchats-sidebar {
+  width: 220px;
+  background: #a76554;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 20px 10px;
+  color: #ffd9ba;
+}
+
+.modal-friend img {
+  width: 50px;           
+  height: 50px;           
+  border-radius: 50%;     
+  object-fit: cover;      
+  flex-shrink: 0;       
+}
+
+.groupchats-sidebar h2 {
+  font-size: 22px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.groupchats-dm-list {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.groupchats-dm {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+
+.groupchats-dm:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.groupchats-dm.unread {
+  background: #ffd9ba;
+  color: #3c2b23;
+  font-weight: bold;
+}
+
+.groupchats-back-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  background: #3c2b23;
+  color: #fff;
+}
+.group-avatar {
+  width: 50px;             
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;       
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.groupchats-back-btn:hover {
+  background: #5a3d31;
+}
+
+/* Chat Area */
+.groupchats-chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+}
+
+/* Header (dark brown restored) */
+.groupchats-chat-header {
+  background: #4e280c;
+  color: #ffd9ba;
+  padding: 10px 20px;
+  font-size: 20px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.groupchats-chat-header-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 2px solid #ffd9ba;
+  object-fit: cover;
+}
+
+/* Chat Body (warm beige gradient) */
+.groupchats-chat-body {
+  flex: 1;
+  background: linear-gradient(to bottom, #f5cba7, #e9967a);
+  border-radius: 8px;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Messages */
+.groupchats-message-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  gap: 10px;
+  max-width: 75%;
+}
+
+.groupchats-message-row.received {
+  flex-direction: row;
+  align-self: flex-start;
+}
+
+.groupchats-message-row.sent {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+
+.groupchats-msg-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.groupchats-message-bubble {
+  display: flex;
+  flex-direction: column;
+  background: #f0f4f7;
+  border-radius: 18px;
+  padding: 10px 15px;
+  position: relative;
+}
+
+.groupchats-message-row.sent .groupchats-message-bubble {
+  background: #db876a;
+  color: #fff;
+}
+
+.groupchats-msg-name {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 3px;
+  color: #3c2b23;
+}
+
+.groupchats-message-row.sent .groupchats-msg-name {
+  color: #ffd9ba;
+}
+
+.groupchats-message-text {
+  font-size: 15px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+/* Input Box */
+.groupchats-input-box {
+  background: #4e280c;
+  padding: 15px 20px;
+  border-top: 3px solid #3a1e09;
+}
+
+.groupchats-chat-input {
+  display: flex;
+  align-items: center;
+  background: #4e280c;
+  width: 100%;
+  gap: 10px;
+}
+
+.groupchats-chat-input input {
+  flex: 1;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 15px;
+  font-size: 16px;
+  outline: none;
+  background: #fefefe;
+  color: #000;
+}
+
+.groupchats-icon-group {
+  display: flex;
+  gap: 10px;
+}
+
+.groupchats-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.groupchats-icon-btn img {
+  width: 28px;
+  height: 28px;
+}
+
+.groupchats-icon-btn:hover {
+  transform: scale(1.1);
+}
+
+.groupchats-send-btn img {
+  background: #f4b991;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background 0.3s;
+}
+
+.groupchats-send-btn img:hover {
+  background: #e0a67c;
+}
+
+/* ---------- Modal Dialog Box ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: #fff8f3;
+  color: #3c2b23;
+  border: 1px solid #d8bca7;
+  border-radius: 16px;
+  padding: 25px 30px;
+  width: 460px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  margin-bottom: 10px;
+}
+
+.modal-friends {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modal-friend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffe9dc;
+  border: 1px solid #f3c7a8;
+  border-radius: 10px;
+  padding: 8px;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.2s ease;
+}
+
+.modal-friend:hover {
+  transform: translateY(-1px);
+  background: #ffe0cf;
+}
+
+.modal-friend.selected {
+  background: #c84848;
+  color: #fff;
+  border-color: #c84848;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.cancel-btn {
+  background: #fff;
+  color: #3c2b23;
+  border: 1px solid #d8bca7;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.confirm-btn {
+  background: #c84848;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.confirm-btn:hover {
+  background: #a93636;
+}
+
+/* Animations */
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
