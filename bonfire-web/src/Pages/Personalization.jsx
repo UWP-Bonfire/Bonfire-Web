@@ -1,14 +1,17 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../Styles/personalization.css";
 
 export default function Personalization() {
+  const navigate = useNavigate();
+
   const [displayName, setDisplayName] = useState("User12");
   const [bio, setBio] = useState("Welcome to Bonfire!");
   const [avatar, setAvatar] = useState("/Profile Images/IMG_1843.png");
   const [usernameColor, setUsernameColor] = useState("#c84848");
   const [bgColor, setBgColor] = useState("#ffd9ba");
 
-   const presetAvatars = [
+  const presetAvatars = [
     "Profile Images/IMG_1843.png",
     "Profile Images/IMG_1844.png",
     "Profile Images/IMG_1845.png",
@@ -26,13 +29,21 @@ export default function Personalization() {
     "Profile Images/IMG_1857.png",
   ];
 
-
   const handleSave = () => {
     alert(`Saved customizations for ${displayName}!`);
   };
 
   return (
     <div className="personalization-container">
+      {/*Back Button */}
+      <button
+        className="back-btn"
+        onClick={() => navigate("/account")}
+        aria-label="Go back to Account"
+      >
+        ← Back to Account
+      </button>
+
       <h1 className="personalization-title">Account Personalization</h1>
 
       {/* ✅ Profile Card Preview (now at the top) */}
@@ -88,7 +99,6 @@ export default function Personalization() {
           <h2>Profile Background Color</h2>
           <input
             type="color"
-            size = ""
             value={bgColor}
             onChange={(e) => setBgColor(e.target.value)}
           />

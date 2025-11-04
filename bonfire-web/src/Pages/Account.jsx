@@ -12,6 +12,11 @@ export default function Account() {
     avatar: "/icons/User.svg",
   };
 
+  const handleLogout = () => {
+    alert("You have been logged out.");
+    navigate("/"); // redirect to login or home page
+  };
+
   return (
     <div className="account-container">
       <h1 className="title">User Account</h1>
@@ -33,15 +38,24 @@ export default function Account() {
         </div>
       </div>
 
+      {/* Account Buttons */}
       <div className="account-buttons">
-        <button className="back-btn" onClick={() => navigate("/friends")}>
+        <button className="btn back" onClick={() => navigate("/friends")}>
           ← Back to Friends
         </button>
-        <button className="edit-btn" onClick={() => navigate("/personalization")}>
+
+        <button className="btn edit" onClick={() => navigate("/personalization")}>
           ✎ Edit Profile
+        </button>
+
+        <button className="btn info" onClick={() => navigate("/accountinfo")}>
+          ⚙️ Change User Info
+        </button>
+
+        <button className="btn logout" onClick={handleLogout}>
+          🚪 Log Out
         </button>
       </div>
     </div>
   );
 }
-
