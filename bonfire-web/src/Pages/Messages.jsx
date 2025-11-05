@@ -18,7 +18,6 @@ export default function Messages() {
 </div>
 
 
-
         <div className="sidebar-icons">
          <div className="dm-list">
           <div className="dm">
@@ -35,7 +34,10 @@ export default function Messages() {
           </div>
         </div>
         </div>
-        <button className="create-group">+ Create Group Chat</button>
+        <button className="create-group" onClick={() => navigate("/groupchats")}>
+          Group Chats
+          </button>
+
       </aside>
 
       {/* Chat Section */}
