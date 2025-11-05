@@ -279,3 +279,41 @@
   transform: rotate(180deg);
 }
 
+/* Read Receipts */
+.msg-time {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  margin-top: 5px;
+  opacity: 0.9;
+  color: #3c2b23;
+}
+
+.message-row.sent .msg-time {
+  color: #ffd9ba;
+}
+
+.check {
+  font-size: 0.85rem;
+  margin-left: 3px;
+  user-select: none;
+}
+
+.check.gray {
+  color: #e9e1d6;
+}
+
+.check.blue {
+  color: #1f87ff;
+}
+
+@keyframes fadeInCheck {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.check {
+  animation: fadeInCheck 0.3s ease-in;
+}

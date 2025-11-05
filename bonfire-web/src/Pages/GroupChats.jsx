@@ -144,7 +144,9 @@ export default function GroupChats() {
             />
             <div className="message-bubble">
               <span className="msg-name">friend2</span>
-              <div className="message-text">How’s the dashboard looking?</div>
+              <div className="message-text">How’s the site looking?</div>
+            
+              <span className="msg-time">10:24 AM</span>
             </div>
           </div>
 
@@ -157,8 +159,10 @@ export default function GroupChats() {
             <div className="message-bubble">
               <span className="msg-name">friend3</span>
               <div className="message-text">
-                Added themes — Bonfire red and warm beige 🌅
+                Finished up the CSS sheet!
               </div>
+              
+              <span className="msg-time">10:25 AM</span>
             </div>
           </div>
 
@@ -167,8 +171,12 @@ export default function GroupChats() {
             <div className="message-bubble">
               <span className="msg-name">you</span>
               <div className="message-text">
-                Nice! That matches the sidebar perfectly.
+                UI looks great, let's finalize soon!
               </div>
+
+              <span className="msg-time">
+                10:26 AM <span className="check blue">✓✓</span>
+              </span>
             </div>
           </div>
         </div>
