@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/groupchats.css"; 
 
@@ -25,6 +25,55 @@ export default function GroupChats() {
   const [groupName, setGroupName] = useState("");
   const [search, setSearch] = useState("");
   const [selectedFriends, setSelectedFriends] = useState([]);
+
+  // 🔹 Simulated messages with read receipts
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      sender: "friend2",
+      text: "How’s the site looking?",
+      type: "received",
+      time: "11:01 AM",
+    },
+    {
+      id: 2,
+      sender: "friend3",
+      text: "Finished up the CSS sheet!",
+      type: "received",
+      time: "11:02 AM",
+    },
+    {
+      id: 3,
+      sender: "you",
+      text: "UI looks great, let's finalize soon!",
+      type: "sent",
+      time: "11:03 AM",
+      status: "sent", // can be sent → delivered → read
+    },
+  ]);
+
+  useEffect(() => {
+    const timer1 = setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.type === "sent" ? { ...m, status: "delivered" } : m
+        )
+      );
+    }, 2000);
+
+    const timer2 = setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.type === "sent" ? { ...m, status: "read" } : m
+        )
+      );
+    }, 4000);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
 
   const friends = [
     "friend1",
@@ -62,7 +111,6 @@ export default function GroupChats() {
 
     setGroups((g) => [newGroup, ...g]);
     setSelectedGroup(newGroup);
-
     setShowModal(false);
     setGroupName("");
     setSearch("");
@@ -136,49 +184,48 @@ export default function GroupChats() {
 
         {/* Chat Messages */}
         <div className="groupchats-chat-body">
-          <div className="message-row received">
-            <img
-              src="Profile Images/IMG_1844.png"
-              alt="friend2"
-              className="msg-avatar"
-            />
-            <div className="message-bubble">
-              <span className="msg-name">friend2</span>
-              <div className="message-text">How’s the site looking?</div>
-            
-              <span className="msg-time">10:24 AM</span>
-            </div>
-          </div>
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`message-row ${
+                msg.type === "sent" ? "sent" : "received"
+              }`}
+            >
+              <img
+                src={
+                  msg.type === "sent"
+                    ? "images/bonfire.png"
+                    : "Profile Images/IMG_1844.png"
+                }
+                alt={msg.sender}
+                className="msg-avatar"
+              />
+              <div className="message-bubble">
+                <span className="msg-name">{msg.sender}</span>
+                <div className="message-text">{msg.text}</div>
 
-          <div className="message-row received">
-            <img
-              src="Profile Images/IMG_1845.png"
-              alt="friend3"
-              className="msg-avatar"
-            />
-            <div className="message-bubble">
-              <span className="msg-name">friend3</span>
-              <div className="message-text">
-                Finished up the CSS sheet!
+                {/* Read Receipt */}
+                {msg.type === "sent" && (
+                  <span className="msg-time">
+                    {msg.time}{" "}
+                    {msg.status === "sent" && (
+                      <span className="check gray">✓</span>
+                    )}
+                    {msg.status === "delivered" && (
+                      <span className="check gray">✓✓</span>
+                    )}
+                    {msg.status === "read" && (
+                      <span className="check blue">✓✓</span>
+                    )}
+                  </span>
+                )}
+
+                {msg.type === "received" && (
+                  <span className="msg-time">{msg.time}</span>
+                )}
               </div>
-              
-              <span className="msg-time">10:25 AM</span>
             </div>
-          </div>
-
-          <div className="message-row sent">
-            <img src="images/bonfire.png" alt="user" className="msg-avatar" />
-            <div className="message-bubble">
-              <span className="msg-name">you</span>
-              <div className="message-text">
-                UI looks great, let's finalize soon!
-              </div>
-
-              <span className="msg-time">
-                10:26 AM <span className="check blue">✓✓</span>
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Input */}
