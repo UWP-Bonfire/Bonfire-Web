@@ -68,6 +68,7 @@ export default function Messages() {
             <div className="message-bubble">
               <span className="msg-name">friend1</span>
               <div className="message-text">Hey! How are you?</div>
+              <span className="msg-time">10:24 AM</span>
             </div>
           </div>
 
@@ -81,6 +82,10 @@ export default function Messages() {
             <div className="message-bubble">
               <span className="msg-name">user</span>
               <div className="message-text">Doing great, thanks! You?</div>
+
+              <span className="msg-time">
+                10:25 AM <span className="check blue">✓✓</span>
+              </span>
             </div>
           </div>
         </div>
