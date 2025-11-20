@@ -135,7 +135,7 @@ export default function GroupChats() {
               onClick={() => setSelectedGroup(group)}
             >
               <img
-                src="Profile Images/IMG_1843.png"
+                src="/Profile Images/IMG_1843.png"
                 alt="group"
                 className="group-avatar"
               />
@@ -160,7 +160,7 @@ export default function GroupChats() {
         <div className="groupchats-chat-header">
           <div className="chat-header-info">
             <img
-              src="Profile Images/IMG_1843.png"
+              src="/Profile Images/IMG_1843.png"
               alt="group"
               className="chat-header-avatar"
             />
@@ -195,7 +195,7 @@ export default function GroupChats() {
                 src={
                   msg.type === "sent"
                     ? "images/bonfire.png"
-                    : "Profile Images/IMG_1844.png"
+                    : "/Profile Images/IMG_1844.png"
                 }
                 alt={msg.sender}
                 className="msg-avatar"
@@ -297,7 +297,7 @@ export default function GroupChats() {
                         }}
                       >
                         <img
-                          src={`Profile Images/IMG_184${(i % 8) + 3}.png`}
+                          src={`/Profile Images/IMG_184${(i % 8) + 3}.png`}
                           alt={f}
                         />
                         <span>{f}</span>
