@@ -1,32 +1,36 @@
-
 .groupchats-container {
   display: flex;
   height: 100vh;
   width: 100vw;
   font-family: "Poppins", sans-serif;
-  background: linear-gradient(to bottom, #e7c586, #db976a, #c84848);
+  background: linear-gradient(
+    180deg,
+    var(--bg-1) 5%,
+    var(--bg-2) 48%,
+    var(--bg-3) 89%
+  );
   overflow: hidden;
-  color: #3c2b23;
+  color: var(--text-main);
 }
 
 /* Sidebar */
 .groupchats-sidebar {
   width: 220px;
-  background: #a76554;
+  background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
   padding: 20px 10px;
-  color: #ffd9ba;
+  color: var(--sidebar-text);
 }
 
 .modal-friend img {
-  width: 50px;           
-  height: 50px;           
-  border-radius: 50%;     
-  object-fit: cover;      
-  flex-shrink: 0;       
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .groupchats-sidebar h2 {
@@ -55,8 +59,8 @@
 }
 
 .groupchats-dm.unread {
-  background: #ffd9ba;
-  color: #3c2b23;
+  background: var(--sidebar-text);
+  color: var(--text-main);
   font-weight: bold;
 }
 
@@ -68,20 +72,21 @@
   margin-top: 10px;
   cursor: pointer;
   font-weight: bold;
-  background: #3c2b23;
-  color: #fff;
+  background: var(--header-border);
+  color: var(--header-text);
 }
+
 .group-avatar {
-  width: 50px;             
+  width: 50px;
   height: 50px;
   border-radius: 50%;
-  object-fit: cover;       
+  object-fit: cover;
   flex-shrink: 0;
   margin-right: 10px;
 }
 
 .groupchats-back-btn:hover {
-  background: #5a3d31;
+  background: var(--sidebar-hover);
 }
 
 /* Chat Area */
@@ -92,10 +97,10 @@
   padding: 15px;
 }
 
-/* Header (dark brown restored) */
+/* Header */
 .groupchats-chat-header {
-  background: #4e280c;
-  color: #ffd9ba;
+  background: var(--header-bg);
+  color: var(--header-text);
   padding: 10px 20px;
   font-size: 20px;
   border-radius: 6px;
@@ -110,14 +115,14 @@
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  border: 2px solid #ffd9ba;
+  border: 2px solid var(--avatar-border);
   object-fit: cover;
 }
 
-/* Chat Body (warm beige gradient) */
+/* Chat Body */
 .groupchats-chat-body {
   flex: 1;
-  background: linear-gradient(to bottom, #f5cba7, #e9967a);
+  background: var(--friend-card-bg);
   border-radius: 8px;
   padding: 20px;
   overflow-y: auto;
@@ -155,26 +160,26 @@
 .groupchats-message-bubble {
   display: flex;
   flex-direction: column;
-  background: #f0f4f7;
+  background: var(--msg-received-bg);
   border-radius: 18px;
   padding: 10px 15px;
   position: relative;
 }
 
 .groupchats-message-row.sent .groupchats-message-bubble {
-  background: #db876a;
-  color: #fff;
+  background: var(--msg-sent-bg);
+  color: var(--msg-sent-text);
 }
 
 .groupchats-msg-name {
   font-weight: bold;
   font-size: 14px;
   margin-bottom: 3px;
-  color: #3c2b23;
+  color: var(--msg-name-text);
 }
 
 .groupchats-message-row.sent .groupchats-msg-name {
-  color: #ffd9ba;
+  color: var(--msg-name-sent-text);
 }
 
 .groupchats-message-text {
@@ -183,46 +188,42 @@
   word-wrap: break-word;
 }
 
+
 /* Input Box */
 .groupchats-input-box {
-  background: #4e280c;
+  background: var(--header-bg);
   padding: 15px 20px;
-  border-top: 3px solid #3a1e09;
+  border-top: 3px solid var(--header-border);
+  display: flex;
+  align-items: center;
 }
 
+/* Chat Input Field */
 .groupchats-chat-input {
   display: flex;
   align-items: center;
-  background: #4e280c;
   width: 100%;
-  gap: 10px;
+  background: var(--header-bg);
+  gap: 12px;
 }
 
 .groupchats-chat-input input {
   flex: 1;
+  height: 50px; 
   border: none;
-  border-radius: 25px;
-  padding: 12px 15px;
-  font-size: 16px;
+  border-radius: 25px; 
+  padding: 0 18px;     
+  font-size: 17px;
   outline: none;
-  background: #fefefe;
-  color: #000;
+  background: var(--input-bg);    
+  color: var(--input-text);
+  border-top: 2px solid var(--input-border-top); 
 }
 
+/* Icons beside input */
 .groupchats-icon-group {
   display: flex;
   gap: 10px;
-}
-
-.groupchats-icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: transform 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .groupchats-icon-btn img {
@@ -230,22 +231,20 @@
   height: 28px;
 }
 
-.groupchats-icon-btn:hover {
-  transform: scale(1.1);
-}
 
 .groupchats-send-btn img {
-  background: #f4b991;
-  padding: 8px;
+  background: var(--accent-1);
+  padding: 10px;
   border-radius: 50%;
   transition: background 0.3s;
 }
 
 .groupchats-send-btn img:hover {
-  background: #e0a67c;
+  background: var(--accent-2);
 }
 
-/* ---------- Modal Dialog Box ---------- */
+
+/* Modal Dialog Box  */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -352,11 +351,11 @@
   font-size: 12px;
   margin-top: 5px;
   opacity: 0.9;
-  color: #3c2b23;
+  color: var(--text-main);
 }
 
 .message-row.sent .msg-time {
-  color: #ffd9ba;
+  color: var(--header-text);
 }
 
 .check {
@@ -366,11 +365,11 @@
 }
 
 .check.gray {
-  color: #e9e1d6;
+  color: var(--check-gray);
 }
 
 .check.blue {
-  color: #1f87ff;
+  color: var(--check-blue);
 }
 
 @keyframes fadeInCheck {
@@ -381,6 +380,11 @@
 .check {
   animation: fadeInCheck 0.3s ease-in;
 }
+
+.create-group{
+  background-color:var(--group-button);
+}
+
 
 
 /* Animations */

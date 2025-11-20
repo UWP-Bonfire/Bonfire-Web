@@ -1,9 +1,9 @@
 .account-container {
   background: linear-gradient(
     180deg,
-    rgba(231, 197, 134, 0.93) 5%,
-    #db976a 48%,
-    rgba(200, 72, 72, 0.67) 89%
+    var(--bg-1) 5%,
+    var(--bg-2) 48%,
+    var(--bg-3) 89%
   );
   min-height: 100vh;
   padding: 40px;
@@ -21,7 +21,7 @@
 }
 
 .account-card {
-  background: #fff8f3;
+  background: var(--card-bg);
   display: flex;
   flex-direction: row;
   align-items: center;

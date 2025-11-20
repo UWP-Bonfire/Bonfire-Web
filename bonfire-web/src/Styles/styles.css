@@ -3,30 +3,42 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(to bottom, #d2b48c, #a0522d);
-  font-family: Arial, sans-serif;
+
+  /* use global gradient */
+  background: linear-gradient(
+    to bottom,
+    var(--bg-1),
+    var(--bg-2),
+    var(--bg-3)
+  );
+
+  font-family: "Jeju Hallasan", sans-serif;
   margin: 0;
 }
 
+/* Card container */
 .auth-container {
-  background: #fff;
+  background: var(--card-bg);   
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   width: 320px;
   text-align: center;
+  color: var(--text-main);
 }
 
 .auth-container h1 {
   margin-bottom: 1.5rem;
-  color: #333;
+  color: var(--text-main);
 }
 
+/* Fields */
 .auth-container label {
   display: block;
   text-align: left;
   margin: 0.5rem 0 0.2rem;
   font-weight: bold;
+  color: var(--text-main);
 }
 
 .auth-container input {
@@ -35,30 +47,36 @@
   margin-bottom: 1rem;
   border: 1px solid #ccc;
   border-radius: 8px;
+  background: #fff;
+  color: #000;
 }
 
+/* BUTTON (Primary) */
 .auth-container button {
   width: 100%;
   padding: 0.8rem;
-  background: #d2691e;
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
+  transition: background 0.3s ease;
 }
 
 .auth-container button:hover {
-  background: #a0522d;
+  background: var(--btn-primary-hover);
 }
 
+/* Switch Links (register/login) */
 .switch-auth {
   margin-top: 1rem;
 }
 
 .switch-auth a {
-  color: #d2691e;
+  color: var(--btn-secondary-bg);   
   text-decoration: none;
+  font-weight: bold;
 }
 
 .switch-auth a:hover {

@@ -1,9 +1,9 @@
 .addfriends-container {
-   background: linear-gradient(
+  background: linear-gradient(
     180deg,
-    rgba(231, 197, 134, 0.93) 5%,
-    #db976a 48%,
-    rgba(200, 72, 72, 0.67) 89%
+    var(--bg-1) 5%,
+    var(--bg-2) 48%,
+    var(--bg-3) 89%
   );
   min-height: 100vh;
   padding: 50px 20px;
@@ -11,16 +11,18 @@
   flex-direction: column;
   align-items: center;
   font-family: "Poppins", sans-serif;
-  color: #3c2b23;
+  color: var(--text-main);
 }
 
+/* Title */
 .page-title {
-  color: #fff;
+  color: var(--header-text);
   font-size: 2.2rem;
   margin-bottom: 30px;
   text-align: center;
 }
 
+/* SEARCH BAR */
 .search-bar {
   width: 80%;
   max-width: 600px;
@@ -33,9 +35,12 @@
   border-radius: 10px;
   border: none;
   font-size: 1rem;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  background: var(--input-bg);
+  color: var(--input-text);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
 }
 
+/* FRIEND LIST */
 .friends-list {
   display: flex;
   flex-direction: column;
@@ -44,8 +49,9 @@
   max-width: 600px;
 }
 
+/* FRIEND CARD */
 .friend-card {
-  background-color: #fff8f3;
+  background-color: var(--card-bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -59,23 +65,26 @@
   transform: scale(1.02);
 }
 
+/* AVATAR */
 .friend-avatar {
   width: 55px;
   height: 55px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #c84848;
+  border: 3px solid var(--accent-1);
 }
 
+/* FRIEND NAME */
 .friend-name {
   flex-grow: 1;
   margin-left: 15px;
   font-weight: 600;
-  color: #3c2b23;
+  color: var(--text-main);
 }
 
+/* ADD BUTTON */
 .add-btn {
-  background-color: #c84848;
+  background-color: var(--group-button);
   color: white;
   border: none;
   border-radius: 8px;
@@ -85,28 +94,31 @@
 }
 
 .add-btn:hover {
-  background-color: #a93636;
+  background-color: var(--sidebar-hover);
 }
 
+/* ADDED BUTTON */
 .added-btn {
-  background-color: #5a3d31;
-  color: white;
+  background-color: var(--sidebar-bg);
+  color: var(--header-text);
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
 }
 
+/* NO RESULTS */
 .no-results {
-  color: #fff;
+  color: var(--header-text);
   font-size: 1.1rem;
   text-align: center;
   margin-top: 20px;
 }
 
+/* BACK BUTTON */
 .back-btn {
   margin-top: 40px;
-  background-color: #3c2b23;
-  color: #fff;
+  background-color: var(--header-bg);
+  color: var(--header-text);
   border: none;
   padding: 12px 28px;
   border-radius: 10px;
@@ -116,5 +128,5 @@
 }
 
 .back-btn:hover {
-  background-color: #5a3d31;
+  background-color: var(--sidebar-hover);
 }
