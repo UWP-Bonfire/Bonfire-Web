@@ -1,9 +1,9 @@
 .personalization-container {
   background: linear-gradient(
     180deg,
-    rgba(231, 197, 134, 0.93) 5%,
-    #db976a 48%,
-    rgba(200, 72, 72, 0.67) 89%
+    var(--bg-1) 5%,
+    var(--bg-2) 48%,
+    var(--bg-3) 89%
   );
   min-height: 100vh;
   padding: 1.5vw 3vw;
@@ -15,13 +15,13 @@
 
 .personalization-title {
   font-size: clamp(1.1rem, 1.4vw, 1.6rem);
-  color: #3c2b23;
+  color: var(--text-main);
   margin-bottom: 1rem;
 }
 
 /* ---------- Preview Card ---------- */
 .top-preview-card {
-  background-color: #ffe5cc;
+  background-color: var(--card-bg);
   border-radius: 16px;
   padding: 25px;
   width: 300px;
@@ -43,11 +43,12 @@
 .top-preview-card p,
 .top-preview-card span {
   font-size: clamp(0.85rem, 1vw, 1rem);
+  color: var(--text-main);
 }
 
 /* ---------- Personalization Card ---------- */
 .personalization-card {
-  background: #fff8f3;
+  background: var(--card-bg);
   padding: 10px 14px;
   border-radius: 10px;
   width: 350px;
@@ -82,15 +83,15 @@
 
 .avatar-choice:hover {
   transform: scale(1.06);
-  border-color: #c84848;
+  border-color: var(--accent-2);
 }
 
 .selected-avatar {
-  border-color: #3c2b23;
+  border-color: var(--text-main);
   transform: scale(1.1);
 }
 
-/* ---------- Input Fields ---------- */
+/* ---------- Inputs ---------- */
 input[type="text"],
 textarea {
   width: 100%;
@@ -100,6 +101,8 @@ textarea {
   font-size: 0.9rem;
   font-family: inherit;
   resize: none;
+  background: #fff;
+  color: #000;
 }
 
 input[type="color"] {
@@ -112,7 +115,7 @@ input[type="color"] {
   padding: 4px;
   appearance: none;
   -webkit-appearance: none;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
 }
 
 input[type="color"]::-webkit-color-swatch,
@@ -123,7 +126,7 @@ input[type="color"]::-moz-color-swatch {
 
 .section h2 {
   margin-bottom: 8px;
-  color: #3c2b23;
+  color: var(--text-main);
   font-weight: 600;
 }
 
@@ -131,8 +134,8 @@ input[type="color"]::-moz-color-swatch {
 .back-btn,
 .save-btn,
 .change-btn {
-  background: #3c2b23;
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 8px;
   padding: 10px 20px;
@@ -145,11 +148,11 @@ input[type="color"]::-moz-color-swatch {
 .back-btn:hover,
 .save-btn:hover,
 .change-btn:hover {
-  background: #5a3d31;
+  background: var(--btn-primary-hover);
   transform: translateY(-2px);
 }
 
-/* Log Out Button - red style */
+/* Logout Button (RED) */
 .logout-btn {
   background: #c84848;
   color: #fff;
@@ -167,7 +170,7 @@ input[type="color"]::-moz-color-swatch {
   transform: translateY(-2px);
 }
 
-/* ---------- Button Container ---------- */
+/* Button Container*/
 .personalization-buttons {
   margin-top: 20px;
   display: flex;
