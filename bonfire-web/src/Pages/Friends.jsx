@@ -1,36 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import useFriends from "./hooks/useFriends";
+import { auth, firestore } from "../firebase";
+import { signOut } from "firebase/auth";
+import { useAuth } from "./hooks/useAuth";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import useNotifications from "./hooks/useNotifications";
+import useFriendRequests from "./hooks/useFriendRequests";
+
 import "../Styles/friends.css";
 
 export default function Friends() {
   const navigate = useNavigate();
+  const { friends, loading, error } = useFriends();
+  const { user } = useAuth();
+  const { requestPermission } = useNotifications();
+  const { requests: friendRequests } = useFriendRequests();
 
-  const friends = [
-    { name: "friend1", img: "Profile Images/IMG_1843.png" },
-    { name: "friend2", img: "Profile Images/IMG_1844.png" },
-    { name: "friend3", img: "Profile Images/IMG_1845.png" },
-  ];
-
-  const [unread, setUnread] = useState(friends.map((f) => f.name));
+  const [unreadCounts, setUnreadCounts] = useState({});
   const [showNotifications, setShowNotifications] = useState(false);
-  const [hasNewNotifications, setHasNewNotifications] = useState(true);
-  const [hoverIndex, setHoverIndex] = useState(null); 
 
-  const dummyNotifications = [
-    { id: 1, text: "✅ Friend1 added you back." },
-    { id: 2, text: "👋 User2 wants to be your friend." },
-    { id: 3, text: "💬 New message received from Friend3." },
-  ];
+  useEffect(() => {
+    requestPermission();
+  }, [requestPermission]);
 
-  const handleOpenChat = (name) => {
-    setUnread(unread.filter((f) => f !== name));
-    navigate("/messages");
+  useEffect(() => {
+    if (!user || friends.length === 0) return;
+
+    const unsubscribes = friends.map((friend) => {
+      const chatId = [user.uid, friend.id].sort().join("_");
+      const messagesRef = collection(firestore, "chats", chatId, "messages");
+      const q = query(
+        messagesRef,
+        where("read", "==", false),
+        where("senderId", "==", friend.id)
+      );
+
+      return onSnapshot(q, (snapshot) => {
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [friend.id]: snapshot.size,
+        }));
+      });
+    });
+
+    return () => unsubscribes.forEach((unsub) => unsub());
+  }, [friends, user]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      navigate("/");
+    } catch (err) {
+      console.error("Sign out error:", err);
+    }
   };
 
-  const toggleNotifications = () => {
-    setShowNotifications(!showNotifications);
-    if (!showNotifications) setHasNewNotifications(false);
-  };
+  if (loading) return <div>Loading friends...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="container">
@@ -39,19 +66,20 @@ export default function Friends() {
         <h2>Direct Messages</h2>
 
         <div className="dm-list">
-          {friends.map((friend, index) => (
+          {friends.map((friend) => (
             <div
-              className={`dm ${unread.includes(friend.name) ? "unread" : ""}`}
-              key={index}
-              onClick={() => handleOpenChat(friend.name)}
+              className="dm"
+              key={friend.id}
+              onClick={() => navigate("/messages")}
             >
               <div className="dm-avatar">
-                <img src={friend.img} alt={friend.name} />
-                {unread.includes(friend.name) && (
+                {/* ✅ public/images/bonfire.png */}
+                <img src="/images/bonfire.png" alt={friend.username} />
+                {unreadCounts[friend.id] > 0 && (
                   <span className="unread-dot"></span>
                 )}
               </div>
-              <span>{friend.name}</span>
+              <span>{friend.username}</span>
             </div>
           ))}
         </div>
@@ -59,11 +87,13 @@ export default function Friends() {
         {/* Bottom Section */}
         <div className="bottom-section">
           <div className="settings-btn" onClick={() => navigate("/account")}>
+            {/* ✅ public/icons/Settings.svg */}
             <img src="/icons/Settings.svg" alt="Settings" />
           </div>
+
           <div className="user" onClick={() => navigate("/account")}>
-            <img src="/icons/User.svg" alt="User" />
-            <span>User123</span>
+            <img src="/images/bonfire.png" alt="User" />
+            <span>{user?.displayName}</span>
           </div>
         </div>
       </div>
@@ -74,19 +104,27 @@ export default function Friends() {
           <h1>Friends Page</h1>
 
           <div className="header-right">
-            {/* 🔔 Notification Bell */}
+            {/* Notification Bell */}
             <div className="notif-container">
-              <button className="notif-btn" onClick={toggleNotifications}>
+              <button
+                className="notif-btn"
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                {/* ✅ public/icons/Bell.png */}
                 <img src="/icons/Bell.png" alt="Notifications" />
-                {hasNewNotifications && <span className="notif-dot"></span>}
+                {friendRequests.length > 0 && (
+                  <span className="notif-dot"></span>
+                )}
               </button>
 
               {showNotifications && (
                 <div className="notif-dropdown">
                   <h3>Notifications</h3>
                   <ul>
-                    {dummyNotifications.map((note) => (
-                      <li key={note.id}>{note.text}</li>
+                    {friendRequests.map((req) => (
+                      <li key={req.id}>
+                        New friend request from {req.fromName || "Someone"}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -99,39 +137,36 @@ export default function Friends() {
             >
               Add Friend
             </button>
+
+            <button className="sign-out-btn" onClick={handleSignOut}>
+              Sign Out
+            </button>
           </div>
         </div>
 
-        {/*Friend Cards  */}
+        {/* Friend Cards */}
         <div className="friends-container">
-          {friends.map((friend, index) => (
-            <div className="friend-card" key={index}>
-              <img src={friend.img} alt={friend.name} />
-              <span>{friend.name}</span>
+          {friends.map((friend) => (
+            <div className="friend-card" key={friend.id}>
+              <img src="/images/bonfire.png" alt={friend.username} />
+
+              <span>{friend.username}</span>
 
               <button
                 className="chat-btn"
                 onClick={() => navigate("/messages")}
               >
-                💬
+                {/* ✅ you have chat_bubble.svg in public/icons */}
+                <img src="/icons/chat_bubble.svg" alt="Chat" />
               </button>
 
-              <div
-                className="options-wrapper"
-                onMouseEnter={() => setHoverIndex(index)}
-                onMouseLeave={() => setHoverIndex(null)}
-              >
+              <div className="options-wrapper">
                 <button className="options-btn">⋮</button>
-
-                {/* Show on hover */}
-                {hoverIndex === index && (
-                  <div className="context-menu">
-                   
-                    <button className="menu-item">Mute Chat</button>
-                    <hr />
-                    <button className="menu-item danger">Remove Friend</button>
-                  </div>
-                )}
+                <div className="context-menu">
+                  <button className="menu-item">Mute Chat</button>
+                  <hr />
+                  <button className="menu-item danger">Remove Friend</button>
+                </div>
               </div>
             </div>
           ))}
