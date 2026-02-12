@@ -3,15 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
-import "../Styles/messages.css";
+import "../Styles/messages.css"; // keep your css path
+
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { firestore } from "../firebase.js";
 
-// ✅ public/ icons/images (no imports)
-const SEND_ICON = "/icons/Message circle.svg";     // or "/icons/chat_bubble.svg"
-const BACK_ICON = "/icons/Users.svg";             // pick one you like, or add a back icon
-const DEFAULT_PFP = "/images/Default PFP.jpg";    // make sure this exists in public/images
-const GLOBAL_ICON = "/images/icon11.png";         // make sure this exists in public/images
+// public/ paths (no imports)
+const DEFAULT_PFP = "/images/Default PFP.jpg";
+const USER_PFP = "/images/bonfire.png";
+const SEND_ICON = "/images/arrow.png";
+const ATTACH_ICON = "/images/message.png";
+const BACK_ICON = "/images/right-arrow.png";
+const GLOBAL_ICON = "/images/icon11.png";
+
+const safeName = (obj) => obj?.name || obj?.username || obj?.displayName || "Anonymous";
+const safeAvatar = (obj) => obj?.avatar || obj?.profileImage || DEFAULT_PFP;
 
 const MessageInput = ({ onSendMessage }) => {
   const [newMessage, setNewMessage] = useState("");
@@ -32,50 +38,62 @@ const MessageInput = ({ onSendMessage }) => {
         onChange={(e) => setNewMessage(e.target.value)}
         placeholder="Type a message..."
       />
-      <button type="submit" className="icon-btn send-btn" aria-label="Send message">
-        <img src={SEND_ICON} alt="Send" />
-      </button>
+
+      {/* matches your CSS: .icon-group .icon-btn */}
+      <div className="icon-group">
+        <button className="icon-btn attach-btn" type="button" aria-label="Add image">
+          <img src={ATTACH_ICON} alt="Add" />
+        </button>
+
+        <button className="icon-btn send-btn" type="submit" aria-label="Send message">
+          <img src={SEND_ICON} alt="Send" />
+        </button>
+      </div>
     </form>
   );
 };
 
-const safeName = (obj) => obj?.name || obj?.username || obj?.displayName || "Anonymous";
-const safeAvatar = (obj) => obj?.avatar || obj?.profileImage || DEFAULT_PFP;
-
 const MessageRow = ({ message, user, userProfiles, isLast, isGlobalChat }) => {
   const isSent = message.senderId === user.uid;
 
-  const formatTimestamp = (timestamp) => {
+  const senderProfile = userProfiles?.[message.senderId];
+  const senderName = safeName(senderProfile);
+  const senderAvatar = safeAvatar(senderProfile);
+
+  const formatTime = (timestamp) => {
     if (!timestamp?.toDate) return "";
     const date = timestamp.toDate();
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const senderProfile = userProfiles?.[message.senderId];
+  // Map backend read logic to your CSS check marks
+  // - sent: ✓
+  // - delivered/read: ✓✓ (blue when read)
+  const status = message.read ? "read" : "delivered";
 
   return (
     <div className={`message-row ${isSent ? "sent" : "received"}`}>
       <img
-        src={safeAvatar(senderProfile)}
-        alt={safeName(senderProfile)}
+        src={isSent ? USER_PFP : senderAvatar}
+        alt={senderName}
         className="msg-avatar"
         onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
       />
 
       <div className="message-bubble">
-        <span className="msg-name">{safeName(senderProfile)}</span>
-
+        <span className="msg-name">{senderName}</span>
         <div className="message-text">{message.text}</div>
 
-        <div className="message-meta">
-          <span className="timestamp">{formatTimestamp(message.timestamp)}</span>
-
+        {/* ✅ your CSS expects .msg-time and .check */}
+        <span className="msg-time">
+          {formatTime(message.timestamp)}
           {!isGlobalChat && isSent && isLast && (
-            <div className={`read-receipt ${message.read ? "read" : "unread"}`}>
-              {message.read ? "✓✓" : "✓"}
-            </div>
+            <>
+              {status === "delivered" && <span className="check gray"> ✓✓ </span>}
+              {status === "read" && <span className="check blue"> ✓✓ </span>}
+            </>
           )}
-        </div>
+        </span>
       </div>
     </div>
   );
@@ -89,12 +107,12 @@ export default function Messages() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
 
-  // ✅ normalize friend shape so UI works whether you store name/avatar as name/avatar or username/profileImage
+  // normalize for CSS/markup: friend.name + friend.avatar always exist
   const normalizedFriends = useMemo(
     () =>
       (friends || []).map((f) => ({
         ...f,
-        id: f.id || f.uid, // just in case
+        id: f.id || f.uid,
         name: safeName(f),
         avatar: safeAvatar(f),
       })),
@@ -130,18 +148,14 @@ export default function Messages() {
       });
     });
 
-    return () => unsubscribes.forEach((unsub) => unsub());
+    return () => unsubscribes.forEach((u) => u());
   }, [normalizedFriends, user]);
 
-  const handleBack = () => {
-    // ✅ pick the route your app actually uses
-    navigate("/friends"); // change to "/app/friends" if needed
-  };
-
-  const handleFriendClick = (friend) => setSelectedFriend(friend);
+  const handleBack = () => navigate("/friends");
 
   const ChatView = ({ friend }) => {
-    // ✅ useChat expects an id
+    const isGlobalChat = friend.id === "global";
+
     const { messages, loading: messagesLoading, sendMessage, userProfiles, markMessageAsRead } =
       useChat(friend.id);
 
@@ -160,18 +174,23 @@ export default function Messages() {
       }
     }, [messages, user?.uid, markMessageAsRead]);
 
-    const isGlobalChat = friend.id === "global";
-
     return (
       <>
-        <div className="chat-header">
-          <img
-            src={friend.avatar}
-            alt={friend.name}
-            className="chat-header-avatar"
-            onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
-          />
-          <span>{isGlobalChat ? "Global Chat Room" : `Chat with ${friend.name}`}</span>
+        {/* ✅ keep your CSS header structure */}
+        <div className="chat-header" style={{ justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img
+              src={friend.avatar}
+              alt={friend.name}
+              className="chat-header-avatar"
+              onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
+            />
+            <span>{isGlobalChat ? "Global Chat Room" : `Chat with ${friend.name}`}</span>
+          </div>
+
+          <button className="back-btn" onClick={handleBack} aria-label="Go back">
+            <img src={BACK_ICON} alt="Back" />
+          </button>
         </div>
 
         <div className="chat-body">
@@ -201,14 +220,13 @@ export default function Messages() {
 
   return (
     <div className="messages-container">
+      {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
-          <button className="back-btn" onClick={handleBack} aria-label="Go back">
-            <img src={BACK_ICON} alt="Back" />
-          </button>
           <h2>Messages</h2>
         </div>
 
+        {/* ✅ Your CSS expects .sidebar-icons to be the list container */}
         <div className="sidebar-icons">
           <div className="dm-list">
             {friendsLoading ? (
@@ -218,17 +236,29 @@ export default function Messages() {
                 <div
                   className={`dm ${selectedFriend?.id === friend.id ? "active" : ""}`}
                   key={friend.id}
-                  onClick={() => handleFriendClick(friend)}
+                  onClick={() => setSelectedFriend(friend)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    cursor: "pointer",
+                    padding: "8px 6px",
+                    borderRadius: 10,
+                    width: "100%",
+                  }}
                 >
                   <img
                     src={friend.avatar}
                     alt={friend.name}
                     onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
+                    style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover" }}
                   />
                   <span>{friend.name}</span>
 
                   {unreadCounts[friend.id] > 0 && !friend.isMuted && (
-                    <span className="unread-count">{unreadCounts[friend.id]}</span>
+                    <span className="unread-count" style={{ marginLeft: "auto" }}>
+                      {unreadCounts[friend.id]}
+                    </span>
                   )}
                 </div>
               ))
@@ -236,19 +266,15 @@ export default function Messages() {
           </div>
         </div>
 
-        <div className="sidebar-bottom-buttons">
-          <button
-            className="create-group"
-            onClick={() =>
-              handleFriendClick({ id: "global", name: "Global Chat Room", avatar: GLOBAL_ICON })
-            }
-          >
-            Global Chat Room
-          </button>
-          <button className="create-group">+ Create Group Chat</button>
-        </div>
+        <button
+          className="create-group"
+          onClick={() => setSelectedFriend({ id: "global", name: "Global Chat Room", avatar: GLOBAL_ICON })}
+        >
+          Global Chat Room
+        </button>
       </aside>
 
+      {/* Chat Area */}
       <main className="chat-area">
         {selectedFriend ? (
           <ChatView key={selectedFriend.id} friend={selectedFriend} />
