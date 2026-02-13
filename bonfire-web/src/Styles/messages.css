@@ -311,3 +311,29 @@
 .check {
   animation: fadeInCheck 0.3s ease-in;
 }
+
+.dm {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  border-radius: 10px;
+}
+
+.dm:hover {
+  background: var(--sidebar-hover);
+}
+
+.dm span {
+  color: var(--sidebar-text);
+  font-size: 14px;
+}
+
+.unread-count {
+  background: var(--accent-1);
+  color: var(--text-main);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+}

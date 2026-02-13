@@ -1,36 +1,30 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import '../Styles/login.css';
+import { useAuthentication } from './hooks/useAuth';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();
+  const { signIn, error, loading } = useAuthentication();
 
-  const handleLogin = (e) => {
-    e.preventDefault(); // stop page reload
-
-    // Temporary fake login check
-    if (username && password) {
-      console.log('Logging in with:', username, password);
-      // simulate success → redirect
-      navigate('/friends');
-    } else {
-      alert('Please enter both username and password');
-    }
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    await signIn(email, password);
   };
 
   return (
     <div className="auth-body">
       <div className="auth-container">
         <h1>Log In</h1>
+        {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleLogin}>
-          <label htmlFor="username">Username</label>
+          <label htmlFor="email">Email</label>
           <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
 
@@ -43,10 +37,12 @@ export default function Login() {
             required
           />
 
-          <button type="submit">Log In</button>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Logging in...' : 'Log In'}
+          </button>
         </form>
         <p className="switch-auth">
-          Don’t have an account? <a href="/signin">Sign Up</a>
+          Don’t have an account? <Link to="/signup">Sign Up</Link>
         </p>
       </div>
     </div>
