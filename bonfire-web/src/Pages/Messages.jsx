@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
-import "../Styles/messages.css"; // keep your css path
+import "../Styles/messages.css"; 
 
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { firestore } from "../firebase.js";
 
-// public/ paths (no imports)
 const DEFAULT_PFP = "/images/Default PFP.jpg";
 const USER_PFP = "/images/bonfire.png";
 const SEND_ICON = "/images/arrow.png";
@@ -39,7 +38,7 @@ const MessageInput = ({ onSendMessage }) => {
         placeholder="Type a message..."
       />
 
-      {/* matches your CSS: .icon-group .icon-btn */}
+    
       <div className="icon-group">
         <button className="icon-btn attach-btn" type="button" aria-label="Add image">
           <img src={ATTACH_ICON} alt="Add" />
@@ -66,9 +65,6 @@ const MessageRow = ({ message, user, userProfiles, isLast, isGlobalChat }) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  // Map backend read logic to your CSS check marks
-  // - sent: ✓
-  // - delivered/read: ✓✓ (blue when read)
   const status = message.read ? "read" : "delivered";
 
   return (
@@ -84,7 +80,6 @@ const MessageRow = ({ message, user, userProfiles, isLast, isGlobalChat }) => {
         <span className="msg-name">{senderName}</span>
         <div className="message-text">{message.text}</div>
 
-        {/* ✅ your CSS expects .msg-time and .check */}
         <span className="msg-time">
           {formatTime(message.timestamp)}
           {!isGlobalChat && isSent && isLast && (
@@ -107,7 +102,6 @@ export default function Messages() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
 
-  // normalize for CSS/markup: friend.name + friend.avatar always exist
   const normalizedFriends = useMemo(
     () =>
       (friends || []).map((f) => ({
@@ -176,7 +170,6 @@ export default function Messages() {
 
     return (
       <>
-        {/* ✅ keep your CSS header structure */}
         <div className="chat-header" style={{ justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
