@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import useChat from "./hooks/useChat";
@@ -215,87 +215,67 @@ export default function Messages() {
     <div className="messages-container">
       {/* Sidebar */}
       <aside className="sidebar">
-  <div className="sidebar-header">
-    <button className="back-btn" onClick={handleBack} aria-label="Go back">
-      <img src="/images/right-arrow.png" alt="Back" />
-    </button>
-    <h2>Messages</h2>
-  </div>
+        <div className="sidebar-header">
+          <h2>Messages</h2>
+        </div>
 
+        {/* ✅ Your CSS expects .sidebar-icons to be the list container */}
         <div className="sidebar-icons">
-         <div className="dm-list">
-          <div className="dm">
-            <img src="/images/3d_avatar_1.png" alt="friend1" />
-            <span>friend1</span>
-          </div>
-          <div className="dm">
-            <img src="/images/3d_avatar_13.png" alt="friend2" />
-            <span>friend2</span>
-          </div>
-          <div className="dm">
-            <img src="/images/3d_avatar_16.png" alt="friend3" />
-            <span>friend3</span>
+          <div className="dm-list">
+            {friendsLoading ? (
+              <div className="loading-friends">Loading friends...</div>
+            ) : (
+              normalizedFriends.map((friend) => (
+                <div
+                  className={`dm ${selectedFriend?.id === friend.id ? "active" : ""}`}
+                  key={friend.id}
+                  onClick={() => setSelectedFriend(friend)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    cursor: "pointer",
+                    padding: "8px 6px",
+                    borderRadius: 10,
+                    width: "100%",
+                  }}
+                >
+                  <img
+                    src={friend.avatar}
+                    alt={friend.name}
+                    onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
+                    style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover" }}
+                  />
+                  <span>{friend.name}</span>
+
+                  {unreadCounts[friend.id] > 0 && !friend.isMuted && (
+                    <span className="unread-count" style={{ marginLeft: "auto" }}>
+                      {unreadCounts[friend.id]}
+                    </span>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
-        </div>
-        <button className="create-group">+ Create Group Chat</button>
+
+        <button
+          className="create-group"
+          onClick={() => setSelectedFriend({ id: "global", name: "Global Chat Room", avatar: GLOBAL_ICON })}
+        >
+          Global Chat Room
+        </button>
       </aside>
 
-      {/* Chat Section */}
+      {/* Chat Area */}
       <main className="chat-area">
-        <div className="chat-header">
-          <img
-            src="/images/3d_avatar_1.png"
-            alt="friend1"
-            className="chat-header-avatar"
-          />
-          <span>Chat with Friend</span>
-        </div>
-
-        {/* Chat Body */}
-        <div className="chat-body">
-          {/* Received message */}
-          <div className="message-row received">
-            <img
-              src="/images/3d_avatar_1.png"
-              alt="friend1"
-              className="msg-avatar"
-            />
-            <div className="message-bubble">
-              <span className="msg-name">friend1</span>
-              <div className="message-text">Hey! How are you?</div>
-            </div>
+        {selectedFriend ? (
+          <ChatView key={selectedFriend.id} friend={selectedFriend} />
+        ) : (
+          <div className="no-chat-selected">
+            <h2>Select a friend to start a conversation</h2>
           </div>
-
-          {/* Sent message */}
-          <div className="message-row sent">
-            <img
-              src="/images/3d_avatar_16.png"
-              alt="user"
-              className="msg-avatar"
-            />
-            <div className="message-bubble">
-              <span className="msg-name">user</span>
-              <div className="message-text">Doing great, thanks! You?</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Input Section */}
-        <div className="input-box">
-          <div className="chat-input">
-            <input type="text" placeholder="Type a message..." />
-
-            <div className="icon-group">
-              <button className="icon-btn attach-btn" aria-label="Add image">
-                <img src="/images/message.png" alt="Add" />
-              </button>
-              <button className="icon-btn send-btn" aria-label="Send message">
-                <img src="/images/arrow.png" alt="Send" />
-              </button>
-            </div>
-          </div>
-        </div>
+        )}
       </main>
     </div>
   );

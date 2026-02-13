@@ -1,0 +1,132 @@
+.addfriends-container {
+  background: linear-gradient(
+    180deg,
+    var(--bg-1) 5%,
+    var(--bg-2) 48%,
+    var(--bg-3) 89%
+  );
+  min-height: 100vh;
+  padding: 50px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "Poppins", sans-serif;
+  color: var(--text-main);
+}
+
+/* Title */
+.page-title {
+  color: var(--header-text);
+  font-size: 2.2rem;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* SEARCH BAR */
+.search-bar {
+  width: 80%;
+  max-width: 600px;
+  margin-bottom: 30px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  background: var(--input-bg);
+  color: var(--input-text);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* FRIEND LIST */
+.friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 80%;
+  max-width: 600px;
+}
+
+/* FRIEND CARD */
+.friend-card {
+  background-color: var(--card-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.friend-card:hover {
+  transform: scale(1.02);
+}
+
+/* AVATAR */
+.friend-avatar {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-1);
+}
+
+/* FRIEND NAME */
+.friend-name {
+  flex-grow: 1;
+  margin-left: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* ADD BUTTON */
+.add-btn {
+  background-color: var(--group-button);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-btn:hover {
+  background-color: var(--sidebar-hover);
+}
+
+/* ADDED BUTTON */
+.added-btn {
+  background-color: var(--sidebar-bg);
+  color: var(--header-text);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+
+/* NO RESULTS */
+.no-results {
+  color: var(--header-text);
+  font-size: 1.1rem;
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* BACK BUTTON */
+.back-btn {
+  margin-top: 40px;
+  background-color: var(--header-bg);
+  color: var(--header-text);
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background-color: var(--sidebar-hover);
+}

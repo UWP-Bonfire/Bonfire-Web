@@ -1,41 +1,129 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  doc,
+  getFirestore,
+  setDoc,
+} from "firebase/firestore";
+import { getStorage, ref, listAll, getDownloadURL } from "firebase/storage";
+import { useAuth } from "./hooks/useAuth";
 import "../Styles/personalization.css";
 
 export default function Personalization() {
-  const [displayName, setDisplayName] = useState("User123");
-  const [bio, setBio] = useState("Welcome to Bonfire!");
-  const [avatar, setAvatar] = useState("/images/3d_avatar_1.png");
-  const [usernameColor, setUsernameColor] = useState("#c84848");
-  const [bgColor, setBgColor] = useState("#ffd9ba");
+  const navigate = useNavigate();
+  const { user, userProfile, loading } = useAuth();
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [avatar, setAvatar] = useState(null); // Initialize with null
+  const [usernameColor, setUsernameColor] = useState("");
+  const [bgColor, setBgColor] = useState("");
+  const [presetAvatars, setPresetAvatars] = useState([]);
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setAvatar(imageUrl);
+  useEffect(() => {
+    const fetchAvatars = async () => {
+      const storage = getStorage();
+      const avatarsRef = ref(storage, 'Profile_Pictures');
+      try {
+        const res = await listAll(avatarsRef);
+        const urls = await Promise.all(
+          res.items.map((itemRef) => getDownloadURL(itemRef))
+        );
+        const filteredUrls = urls.filter(url => !url.includes('logo.png'));
+        setPresetAvatars(filteredUrls);
+        if (userProfile && userProfile.avatar) {
+          setAvatar(userProfile.avatar);
+        } else if (filteredUrls.length > 0) {
+          setAvatar(filteredUrls[0]); // Set default avatar from storage
+        }
+      } catch (error) {
+        console.error("Error fetching avatars from storage: ", error);
+      }
+    };
+
+    fetchAvatars();
+  }, [userProfile]);
+
+  useEffect(() => {
+    if (userProfile) {
+      setDisplayName(userProfile.displayName || "User12");
+      setBio(userProfile.bio || "Welcome to Bonfire!");
+      setUsernameColor(userProfile.usernameColor || "#c84848");
+      setBgColor(userProfile.bgColor || "#ffd9ba");
+    }
+  }, [userProfile]);
+
+  const handleSave = async () => {
+    if (!user) return;
+
+    const db = getFirestore();
+    const userRef = doc(db, "users", user.uid);
+
+    try {
+      await setDoc(
+        userRef,
+        {
+          ...userProfile, // Preserve existing data
+          displayName,
+          bio,
+          avatar,
+          usernameColor,
+          bgColor,
+        },
+        { merge: true }
+      ); // Use merge to avoid overwriting other fields
+      alert("Your customizations have been saved!");
+    } catch (error) {
+      console.error("Error saving customizations: ", error);
+      alert("Could not save changes. Please try again.");
     }
   };
 
-  const handleSave = () => {
-    alert(`Saved customizations for ${displayName}!`);
-  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
 
   return (
     <div className="personalization-container">
+      {/* Back Button */}
+      <button
+        className="back-btn"
+        onClick={() => navigate("/account")}
+        aria-label="Go back to Account"
+      >
+        ← Back to Account
+      </button>
+
       <h1 className="personalization-title">Account Personalization</h1>
 
+      {/* Profile Preview */}
+      <div className="top-preview-card" style={{ backgroundColor: bgColor }}>
+        <img src={avatar} alt="Avatar" className="top-avatar" />
+        <h3 style={{ color: usernameColor }}>{displayName}</h3>
+        <p>{bio}</p>
+      </div>
+
+      {/* Settings */}
       <div className="personalization-card">
+        {/* Avatar Selection */}
         <div className="section">
-          <h2>Profile Picture</h2>
-          <img src={avatar} alt="Avatar" className="avatar-preview" />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarChange}
-            className="upload-input"
-          />
+          <h2>Choose Your Profile Picture</h2>
+          <div className="avatar-options">
+            {presetAvatars.map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt={`Avatar ${index + 1}`}
+                className={`avatar-choice ${
+                  avatar === img ? "selected-avatar" : ""
+                }`}
+                onClick={() => setAvatar(img)}
+              />
+            ))}
+          </div>
         </div>
 
+        {/* Display Name */}
         <div className="section">
           <h2>Display Name</h2>
           <input
@@ -46,6 +134,7 @@ export default function Personalization() {
           />
         </div>
 
+        {/* Username Color */}
         <div className="section">
           <h2>Username Color</h2>
           <input
@@ -55,6 +144,7 @@ export default function Personalization() {
           />
         </div>
 
+        {/* Background Color */}
         <div className="section">
           <h2>Profile Background Color</h2>
           <input
@@ -64,6 +154,7 @@ export default function Personalization() {
           />
         </div>
 
+        {/* Bio */}
         <div className="section">
           <h2>Bio</h2>
           <textarea
@@ -73,15 +164,10 @@ export default function Personalization() {
           />
         </div>
 
+        {/* Save Button */}
         <button className="save-btn" onClick={handleSave}>
           Save Changes
         </button>
-      </div>
-
-      <div className="preview-card" style={{ backgroundColor: bgColor }}>
-        <img src={avatar} alt="Preview Avatar" className="preview-avatar" />
-        <h3 style={{ color: usernameColor }}>{displayName}</h3>
-        <p>{bio}</p>
       </div>
     </div>
   );
