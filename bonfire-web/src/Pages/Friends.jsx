@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+
 import useFriends from "./hooks/useFriends";
+import useFriendRequests from "./hooks/useFriendRequests";
+import { useAuth } from "./hooks/useAuth";
+import useNotifications from "./hooks/useNotifications";
+
 import { auth, firestore } from "../firebase";
 import { signOut } from "firebase/auth";
-import { useAuth } from "./hooks/useAuth";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
-import useNotifications from "./hooks/useNotifications";
-import useFriendRequests from "./hooks/useFriendRequests";
 
+// ✅ keep your CSS file
 import "../Styles/friends.css";
 
 export default function Friends() {
   const navigate = useNavigate();
+
   const { friends, loading, error } = useFriends();
   const { user } = useAuth();
+
   const { requestPermission } = useNotifications();
+
   const { requests: friendRequests } = useFriendRequests();
 
   const [unreadCounts, setUnreadCounts] = useState({});
@@ -24,6 +30,7 @@ export default function Friends() {
     requestPermission();
   }, [requestPermission]);
 
+  // unread message dots in sidebar
   useEffect(() => {
     if (!user || friends.length === 0) return;
 
@@ -73,21 +80,25 @@ export default function Friends() {
               onClick={() => navigate("/messages")}
             >
               <div className="dm-avatar">
-                {/* ✅ public/images/bonfire.png */}
-                <img src="/images/bonfire.png" alt={friend.username} />
+                <img
+                  src={friend.avatar || "/images/default-avatar.png"}
+                  alt={friend.name}
+                  onError={(e) =>
+                    (e.currentTarget.src = "/images/default-avatar.png")
+                  }
+                />
                 {unreadCounts[friend.id] > 0 && (
                   <span className="unread-dot"></span>
                 )}
               </div>
-              <span>{friend.username}</span>
+
+              <span className="dm-name">{friend.name}</span>
             </div>
           ))}
         </div>
 
-        {/* Bottom Section */}
         <div className="bottom-section">
           <div className="settings-btn" onClick={() => navigate("/account")}>
-            {/* ✅ public/icons/Settings.svg */}
             <img src="/icons/Settings.svg" alt="Settings" />
           </div>
 
@@ -98,19 +109,18 @@ export default function Friends() {
         </div>
       </div>
 
-      {/* Main Area */}
+      {/* Main */}
       <div className="main">
         <div className="main-header">
           <h1>Friends Page</h1>
 
           <div className="header-right">
-            {/* Notification Bell */}
+            {/* Bell notifications kept */}
             <div className="notif-container">
               <button
                 className="notif-btn"
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() => setShowNotifications((s) => !s)}
               >
-                {/* ✅ public/icons/Bell.png */}
                 <img src="/icons/Bell.png" alt="Notifications" />
                 {friendRequests.length > 0 && (
                   <span className="notif-dot"></span>
@@ -121,11 +131,15 @@ export default function Friends() {
                 <div className="notif-dropdown">
                   <h3>Notifications</h3>
                   <ul>
-                    {friendRequests.map((req) => (
-                      <li key={req.id}>
-                        New friend request from {req.fromName || "Someone"}
-                      </li>
-                    ))}
+                    {friendRequests.length === 0 ? (
+                      <li>No new notifications</li>
+                    ) : (
+                      friendRequests.map((req) => (
+                        <li key={req.id}>
+                          New friend request from {req.fromName || "Someone"}
+                        </li>
+                      ))
+                    )}
                   </ul>
                 </div>
               )}
@@ -144,20 +158,22 @@ export default function Friends() {
           </div>
         </div>
 
-        {/* Friend Cards */}
+        {/* Friends list */}
         <div className="friends-container">
           {friends.map((friend) => (
             <div className="friend-card" key={friend.id}>
-              <img src="/images/bonfire.png" alt={friend.username} />
+              <img
+                src={friend.avatar || "/images/default-avatar.png"}
+                alt={friend.name}
+                onError={(e) =>
+                  (e.currentTarget.src = "/images/default-avatar.png")
+                }
+              />
 
-              <span>{friend.username}</span>
+              <span>{friend.name}</span>
 
-              <button
-                className="chat-btn"
-                onClick={() => navigate("/messages")}
-              >
-                {/* ✅ you have chat_bubble.svg in public/icons */}
-                <img src="/icons/chat_bubble.svg" alt="Chat" />
+              <button className="chat-btn" onClick={() => navigate("/messages")}>
+                💬
               </button>
 
               <div className="options-wrapper">

@@ -208,7 +208,7 @@ body {
 }
 
 .friend-card {
-  background-color: var(--friend-cad-bg) ;
+  background-color: var(--card-bg); /* white */
   border-radius: 8px;
   width: 95%;
   padding: 50px 20px;
@@ -234,7 +234,7 @@ body {
 .friend-card span {
   flex: 1;
   font-size: 22px;
-  color: var(--text-main);
+  color: black;
   margin-left: 10px;
 }
 
