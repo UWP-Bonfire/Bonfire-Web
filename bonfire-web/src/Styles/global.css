@@ -49,7 +49,7 @@ body {
 
   /* Message bubble colors (light mode) */
   --msg-sent-bg: #db876a; /* sent messages (accent) */
-  --msg-sent-text: #ffffff; /* text color for sent messages */
+  --msg-sent-text: #1d1d1d; /* text color for sent messages */
   --msg-sent-name: #ffd9ba; /* sender name color on sent messages */
   --msg-received-bg: var(--card-bg); /* received messages background */
   --msg-name-text: var(--text-main);
@@ -72,7 +72,7 @@ body.dark {
   --bg-2: #2b2438;
   --bg-3: #744d30;
 
-  --text-main: #e2dcd3;
+  --text-main: #242424;
 
   --card-bg: #37382b;
 
