@@ -14,7 +14,7 @@ export default function Personalization() {
   const { user, userProfile, loading } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
-  const [avatar, setAvatar] = useState(null); // Initialize with null
+  const [avatar, setAvatar] = useState(null); 
   const [usernameColor, setUsernameColor] = useState("");
   const [bgColor, setBgColor] = useState("");
   const [presetAvatars, setPresetAvatars] = useState([]);
@@ -33,7 +33,7 @@ export default function Personalization() {
         if (userProfile && userProfile.avatar) {
           setAvatar(userProfile.avatar);
         } else if (filteredUrls.length > 0) {
-          setAvatar(filteredUrls[0]); // Set default avatar from storage
+          setAvatar(filteredUrls[0]); 
         }
       } catch (error) {
         console.error("Error fetching avatars from storage: ", error);
@@ -62,7 +62,7 @@ export default function Personalization() {
       await setDoc(
         userRef,
         {
-          ...userProfile, // Preserve existing data
+          ...userProfile, 
           displayName,
           bio,
           avatar,
@@ -70,7 +70,7 @@ export default function Personalization() {
           bgColor,
         },
         { merge: true }
-      ); // Use merge to avoid overwriting other fields
+      ); 
       alert("Your customizations have been saved!");
     } catch (error) {
       console.error("Error saving customizations: ", error);

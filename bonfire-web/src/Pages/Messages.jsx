@@ -3,13 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
-import "../Styles/messages.css"; 
+import "../Styles/messages.css";
 
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { firestore } from "../firebase.js";
 
 const DEFAULT_PFP = "/images/Default PFP.jpg";
-const USER_PFP = "/images/bonfire.png";
 const SEND_ICON = "/images/arrow.png";
 const ATTACH_ICON = "/images/message.png";
 const BACK_ICON = "/images/right-arrow.png";
@@ -18,6 +17,9 @@ const GLOBAL_ICON = "/images/icon11.png";
 const safeName = (obj) => obj?.name || obj?.username || obj?.displayName || "Anonymous";
 const safeAvatar = (obj) => obj?.avatar || obj?.profileImage || DEFAULT_PFP;
 
+/* =========================
+   Message Input
+========================= */
 const MessageInput = ({ onSendMessage }) => {
   const [newMessage, setNewMessage] = useState("");
 
@@ -38,13 +40,12 @@ const MessageInput = ({ onSendMessage }) => {
         placeholder="Type a message..."
       />
 
-    
       <div className="icon-group">
-        <button className="icon-btn attach-btn" type="button" aria-label="Add image">
+        <button className="icon-btn attach-btn" type="button">
           <img src={ATTACH_ICON} alt="Add" />
         </button>
 
-        <button className="icon-btn send-btn" type="submit" aria-label="Send message">
+        <button className="icon-btn send-btn" type="submit">
           <img src={SEND_ICON} alt="Send" />
         </button>
       </div>
@@ -52,7 +53,10 @@ const MessageInput = ({ onSendMessage }) => {
   );
 };
 
-const MessageRow = ({ message, user, userProfiles, isLast, isGlobalChat }) => {
+/* =========================
+   Message Row
+========================= */
+const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalChat }) => {
   const isSent = message.senderId === user.uid;
 
   const senderProfile = userProfiles?.[message.senderId];
@@ -65,27 +69,30 @@ const MessageRow = ({ message, user, userProfiles, isLast, isGlobalChat }) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const status = message.read ? "read" : "delivered";
-
   return (
     <div className={`message-row ${isSent ? "sent" : "received"}`}>
       <img
-        src={isSent ? USER_PFP : senderAvatar}
+        src={isSent ? myAvatar : senderAvatar}
         alt={senderName}
         className="msg-avatar"
         onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
       />
 
       <div className="message-bubble">
-        <span className="msg-name">{senderName}</span>
+        <span className="msg-name">{isSent ? (user.displayName || "You") : senderName}</span>
         <div className="message-text">{message.text}</div>
 
         <span className="msg-time">
           {formatTime(message.timestamp)}
+
+          {/* ✅ Read receipt: ✓ (sent) then ✓✓ (read) */}
           {!isGlobalChat && isSent && isLast && (
             <>
-              {status === "delivered" && <span className="check gray"> ✓✓ </span>}
-              {status === "read" && <span className="check blue"> ✓✓ </span>}
+              {message.read ? (
+                <span className="check blue"> ✓✓ </span>
+              ) : (
+                <span className="check gray"> ✓ </span>
+              )}
             </>
           )}
         </span>
@@ -96,8 +103,10 @@ const MessageRow = ({ message, user, userProfiles, isLast, isGlobalChat }) => {
 
 export default function Messages() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { friends, loading: friendsLoading } = useFriends();
+
+  const myAvatar = userProfile?.avatar || user?.photoURL || DEFAULT_PFP;
 
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
@@ -117,17 +126,11 @@ export default function Messages() {
     if (!user || normalizedFriends.length === 0) return;
 
     const unsubscribes = normalizedFriends.map((friend) => {
-      if (friend.isMuted) {
-        setUnreadCounts((prev) => {
-          const next = { ...prev };
-          delete next[friend.id];
-          return next;
-        });
-        return () => {};
-      }
+      if (friend.isMuted) return () => {};
 
       const chatId = [user.uid, friend.id].sort().join("_");
       const messagesRef = collection(firestore, "chats", chatId, "messages");
+
       const q = query(
         messagesRef,
         where("read", "==", false),
@@ -158,11 +161,12 @@ export default function Messages() {
     useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
 
-      // mark unread incoming messages as read
+      // ✅ IMPORTANT: mark unread incoming messages as read using the correct id
       if (messages?.length) {
         messages.forEach((m) => {
           if (m.senderId !== user.uid && !m.read) {
-            markMessageAsRead(m.id);
+            const idToMark = m.id || m.docId || m.messageId;
+            if (idToMark) markMessageAsRead(idToMark);
           }
         });
       }
@@ -181,21 +185,22 @@ export default function Messages() {
             <span>{isGlobalChat ? "Global Chat Room" : `Chat with ${friend.name}`}</span>
           </div>
 
-          <button className="back-btn" onClick={handleBack} aria-label="Go back">
+          <button className="back-btn" onClick={handleBack}>
             <img src={BACK_ICON} alt="Back" />
           </button>
         </div>
 
         <div className="chat-body">
           {messagesLoading && (!messages || messages.length === 0) ? (
-            <div className="loading-messages">Loading messages...</div>
+            <div>Loading messages...</div>
           ) : (
             messages.map((message, index) => (
               <MessageRow
-                key={message.id}
+                key={message.id || message.docId || message.messageId || index}
                 message={message}
                 user={user}
                 userProfiles={userProfiles}
+                myAvatar={myAvatar}
                 isLast={index === messages.length - 1}
                 isGlobalChat={isGlobalChat}
               />
@@ -213,61 +218,50 @@ export default function Messages() {
 
   return (
     <div className="messages-container">
-      {/* Sidebar */}
       <aside className="sidebar">
-        <div className="sidebar-header">
-          <h2>Messages</h2>
+        <h2>Messages</h2>
+
+        <div className="dm-list">
+          {friendsLoading ? (
+            <div>Loading friends...</div>
+          ) : (
+            normalizedFriends.map((friend) => (
+              <div
+                className={`dm ${selectedFriend?.id === friend.id ? "active" : ""}`}
+                key={friend.id}
+                onClick={() => setSelectedFriend(friend)}
+              >
+                <img
+                  src={friend.avatar}
+                  alt={friend.name}
+                  onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
+                />
+                <span>{friend.name}</span>
+
+                {unreadCounts[friend.id] > 0 && !friend.isMuted && (
+                  <span className="unread-count">{unreadCounts[friend.id]}</span>
+                )}
+              </div>
+            ))
+          )}
         </div>
 
-        {/* ✅ Your CSS expects .sidebar-icons to be the list container */}
-        <div className="sidebar-icons">
-          <div className="dm-list">
-            {friendsLoading ? (
-              <div className="loading-friends">Loading friends...</div>
-            ) : (
-              normalizedFriends.map((friend) => (
-                <div
-                  className={`dm ${selectedFriend?.id === friend.id ? "active" : ""}`}
-                  key={friend.id}
-                  onClick={() => setSelectedFriend(friend)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    cursor: "pointer",
-                    padding: "8px 6px",
-                    borderRadius: 10,
-                    width: "100%",
-                  }}
-                >
-                  <img
-                    src={friend.avatar}
-                    alt={friend.name}
-                    onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
-                    style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover" }}
-                  />
-                  <span>{friend.name}</span>
-
-                  {unreadCounts[friend.id] > 0 && !friend.isMuted && (
-                    <span className="unread-count" style={{ marginLeft: "auto" }}>
-                      {unreadCounts[friend.id]}
-                    </span>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <button className="create-group">+ Create Group Chat</button>
 
         <button
           className="create-group"
-          onClick={() => setSelectedFriend({ id: "global", name: "Global Chat Room", avatar: GLOBAL_ICON })}
+          onClick={() =>
+            setSelectedFriend({
+              id: "global",
+              name: "Global Chat Room",
+              avatar: GLOBAL_ICON,
+            })
+          }
         >
           Global Chat Room
         </button>
       </aside>
 
-      {/* Chat Area */}
       <main className="chat-area">
         {selectedFriend ? (
           <ChatView key={selectedFriend.id} friend={selectedFriend} />

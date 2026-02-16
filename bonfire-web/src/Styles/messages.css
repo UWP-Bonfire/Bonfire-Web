@@ -59,8 +59,8 @@
   padding: 10px;
   cursor: pointer;
   font-size: 14px;
-  margin-top: auto;
   transition: background 0.3s;
+  margin-top: 10px; 
 }
 
 .create-group:hover {
@@ -114,7 +114,7 @@
   align-items: flex-start;
   margin-bottom: 15px;
   gap: 10px;
-  max-width: 75%;
+  max-width: 85%;
 }
 
 .message-row.received {
@@ -141,43 +141,43 @@
   flex-direction: column;
   background: var(--card-bg);
   border-radius: 18px;
-  padding: 10px 15px;
+  padding: 16px 20px;
   position: relative;
 }
 
 .message-row.sent .message-bubble {
-  background: var(--msg-sent-bg); /* was #db876a */
-  color: var(--msg-sent-text);   /* was #fff */
+  background: var(--msg-sent-bg); 
+  color: var(--msg-sent-text);  
 }
 
 /* Sender name above text */
 .msg-name {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 15px;
   margin-bottom: 3px;
   color: var(--text-main);
 }
 
 .message-row.sent .msg-name {
-  color: var(--msg-sent-name); /* was #ffd9ba */
+  color: var(--msg-sent-name); 
 }
 
 .message-text {
-  font-size: 15px;
-  line-height: 1.4;
+  font-size: 17px;
+  line-height: 1.55;
   word-wrap: break-word;
   color: var(--text-main);
 }
 
 .message-row.sent .message-text {
-  color: var(--msg-sent-text); /* was #fff */
+  color: var(--msg-sent-text); 
 }
 
 /* Input Bar */
 .input-box {
   background: var(--header-bg);
   padding: 15px 20px;
-  border-top: 3px solid var(--input-border-top); /* was #3a1e09 */
+  border-top: 3px solid var(--input-border-top); 
 }
 
 /* Input row */
