@@ -293,7 +293,6 @@ body {
   right: 6px;
   width: 10px;
   height: 10px;
-  /* Hard-coded to red as requested */
   background-color: #ff3b30;
   border-radius: 50%;
   border: 2px solid var(--card-bg);
@@ -374,10 +373,11 @@ body {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.options-wrapper:hover .context-menu {
+.context-menu.show {
   opacity: 1;
   transform: translateY(0);
 }
+
 
 .menu-item {
   background: none;
@@ -407,4 +407,48 @@ body {
   border-top: 1px solid var(--notif-highlight);
   margin: 5px 0;
   height: 0;
+}
+
+.friend-requests-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    color: #000;
+}
+
+.friend-requests-list {
+    list-style: none;
+    padding: 0;
+}
+
+.friend-request-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.friend-request-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+.request-buttons button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.accept-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.decline-btn {
+    background-color: #f44336;
+    color: white;
 }
