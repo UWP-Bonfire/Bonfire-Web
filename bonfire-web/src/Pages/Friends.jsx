@@ -10,21 +10,30 @@ import { auth, firestore } from "../firebase";
 import { signOut } from "firebase/auth";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 
-// ✅ keep your CSS file
 import "../Styles/friends.css";
+
+const DEFAULT_AVATAR = "/images/default-avatar.png";
 
 export default function Friends() {
   const navigate = useNavigate();
 
   const { friends, loading, error } = useFriends();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
 
   const { requestPermission } = useNotifications();
 
-  const { requests: friendRequests } = useFriendRequests();
+  const {
+    requests: friendRequests,
+    loading: reqLoading,
+    error: reqError,
+    acceptRequest,
+    declineRequest,
+  } = useFriendRequests();
 
   const [unreadCounts, setUnreadCounts] = useState({});
   const [showNotifications, setShowNotifications] = useState(false);
+  const [activeOptionsMenu, setActiveOptionsMenu] = useState(null);
+
 
   useEffect(() => {
     requestPermission();
@@ -81,11 +90,9 @@ export default function Friends() {
             >
               <div className="dm-avatar">
                 <img
-                  src={friend.avatar || "/images/default-avatar.png"}
+                  src={friend.avatar || DEFAULT_AVATAR}
                   alt={friend.name}
-                  onError={(e) =>
-                    (e.currentTarget.src = "/images/default-avatar.png")
-                  }
+                  onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
                 />
                 {unreadCounts[friend.id] > 0 && (
                   <span className="unread-dot"></span>
@@ -103,7 +110,11 @@ export default function Friends() {
           </div>
 
           <div className="user" onClick={() => navigate("/account")}>
-            <img src="/images/bonfire.png" alt="User" />
+            <img
+              src={userProfile?.avatar || user?.photoURL || "/images/bonfire.png"}
+              alt="User"
+              onError={(e) => (e.currentTarget.src = "/images/bonfire.png")}
+            />
             <span>{user?.displayName}</span>
           </div>
         </div>
@@ -158,16 +169,59 @@ export default function Friends() {
           </div>
         </div>
 
+        {/* ✅ Friend Requests card (added) */}
+        <div className="friend-requests-container">
+          <h3>Friend Requests</h3>
+
+          {reqLoading ? (
+            <p>Loading...</p>
+          ) : reqError ? (
+            <p>Error: {reqError}</p>
+          ) : friendRequests.length === 0 ? (
+            <p>You have no pending friend requests.</p>
+          ) : (
+            <ul className="friend-requests-list">
+              {friendRequests.map((request) => (
+                <li key={request.id} className="friend-request-item">
+                  <img
+                    src={request.fromAvatar || DEFAULT_AVATAR}
+                    alt={request.fromName || "User"}
+                    onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
+                  />
+
+                  <span>{request.fromName || "Unknown"}</span>
+
+                  <div className="request-buttons">
+                    <button
+                      type="button"
+                      onClick={() => acceptRequest(request.id, request.from)}
+                      className="accept-btn"
+                    >
+                      Accept
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => declineRequest(request.id)}
+                      className="decline-btn"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         {/* Friends list */}
         <div className="friends-container">
           {friends.map((friend) => (
             <div className="friend-card" key={friend.id}>
               <img
-                src={friend.avatar || "/images/default-avatar.png"}
+                src={friend.avatar || DEFAULT_AVATAR}
                 alt={friend.name}
-                onError={(e) =>
-                  (e.currentTarget.src = "/images/default-avatar.png")
-                }
+                onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
               />
 
               <span>{friend.name}</span>
@@ -177,13 +231,28 @@ export default function Friends() {
               </button>
 
               <div className="options-wrapper">
-                <button className="options-btn">⋮</button>
-                <div className="context-menu">
-                  <button className="menu-item">Mute Chat</button>
-                  <hr />
-                  <button className="menu-item danger">Remove Friend</button>
-                </div>
-              </div>
+  <button
+    className="options-btn"
+    onClick={() =>
+      setActiveOptionsMenu(
+        activeOptionsMenu === friend.id ? null : friend.id
+      )
+    }
+  >
+    ⋮
+  </button>
+
+  <div
+    className={`context-menu ${
+      activeOptionsMenu === friend.id ? "show" : ""
+    }`}
+  >
+    <button className="menu-item">Mute Chat</button>
+    <hr />
+    <button className="menu-item danger">Remove Friend</button>
+  </div>
+</div>
+
             </div>
           ))}
         </div>

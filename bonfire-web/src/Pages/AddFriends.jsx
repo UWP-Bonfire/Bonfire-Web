@@ -14,7 +14,7 @@ function AddFriends() {
     const navigate = useNavigate();
 
     const handleGoBack = () => {
-        navigate('/app/friends');
+        navigate('/friends');
     };
 
     const handleSearch = async (e) => {
@@ -100,7 +100,7 @@ function AddFriends() {
             </div>
             <button onClick={handleGoBack} className="back-btn">
                 <span>&larr;</span>
-                <span>Back to Friends</span>
+                <span>Back to Home</span>
             </button>
         </div>
     );

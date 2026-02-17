@@ -1,17 +1,17 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
-import { auth } from "../firebase"; 
+import { auth } from "../firebase";
 import { useAuth } from "./hooks/useAuth";
-import "../Styles/account.css"; 
+import "../Styles/account.css";
+
+const DEFAULT_AVATAR = "/icons/User.svg"; 
 
 export default function Account() {
   const navigate = useNavigate();
   const { userProfile, loading } = useAuth();
 
-  if (loading) {
-    return <div className="account-container">Loading Profile...</div>;
-  }
+  if (loading) return <div className="account-container">Loading Profile...</div>;
 
   if (!userProfile) {
     return (
@@ -25,14 +25,11 @@ export default function Account() {
   const email = userProfile.email || auth?.currentUser?.email || "No email";
   const bio = userProfile.bio || "Welcome to Bonfire!";
 
-  const avatar =
-    userProfile.avatar?.startsWith("/") // already a public path
-      ? userProfile.avatar
-      : "/icons/User.svg"; // fallback (public/icons/User.svg)
+  const avatar = userProfile.avatar || auth?.currentUser?.photoURL || DEFAULT_AVATAR;
 
   const handleLogout = async () => {
     try {
-      await signOut(auth); 
+      await signOut(auth);
       sessionStorage.clear();
       localStorage.clear();
       navigate("/");
@@ -52,9 +49,9 @@ export default function Account() {
             alt="Profile"
             className="account-avatar"
             onError={(e) => {
-              // if avatar path is broken, fall back automatically
-              e.currentTarget.src = "/icons/User.svg";
+              e.currentTarget.src = DEFAULT_AVATAR;
             }}
+            referrerPolicy="no-referrer"
           />
         </div>
 
@@ -71,7 +68,6 @@ export default function Account() {
       </div>
 
       <div className="account-buttons">
-        {/* ✅ choose ONE routing style based on your app */}
         <button className="btn back" onClick={() => navigate("/friends")}>
           ← Back to Friends
         </button>
