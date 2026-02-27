@@ -183,7 +183,7 @@
 /* Input row */
 .chat-input {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   background: var(--header-bg);
   width: 100%;
   gap: 10px;
@@ -336,4 +336,39 @@
   font-size: 12px;
   padding: 4px 8px;
   border-radius: 999px;
+}
+
+/* Make input row align to bottom when textarea grows */
+.chat-input {
+  display: flex;
+  align-items: flex-end;
+  background: var(--header-bg);
+  width: 100%;
+  gap: 10px;
+}
+
+/* Auto-growing textarea (replaces input) */
+.chat-textarea {
+  flex: 1;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 15px;
+  font-size: 16px;
+  outline: none;
+  background: var(--input-bg);
+  color: var(--input-text);
+
+  resize: none;
+  overflow: hidden;
+  min-height: 44px;
+  max-height: 140px;
+}
+
+
+/* Image inside message bubble */
+.message-image {
+  width: 260px;
+  max-width: 100%;
+  border-radius: 14px;
+  margin-bottom: 8px;
 }
