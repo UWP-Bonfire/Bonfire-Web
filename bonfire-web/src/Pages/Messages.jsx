@@ -4,8 +4,8 @@ import { useAuth } from "./hooks/useAuth";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
 import "../Styles/messages.css";
-
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import useImageUpload from "./hooks/useImageUpload";
+import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
 import { firestore } from "../firebase.js";
 
 const DEFAULT_PFP = "/images/Default PFP.jpg";
@@ -223,6 +223,39 @@ export default function Messages() {
     const { messages, loading: messagesLoading, sendMessage, sendImage, userProfiles, markMessageAsRead } =
   useChat(friend.id);
 
+  const { uploadImage } = useImageUpload();
+
+const getChatId = (uid1, uid2) => [uid1, uid2].sort().join("_");
+
+const sendImageOnly = async (file) => {
+  if (!file || !user || !friend?.id) return;
+  if (!file.type?.startsWith("image/")) return;
+
+  const isGlobalChat = friend.id === "global";
+  const messagesPath = isGlobalChat
+    ? "messages"
+    : `chats/${getChatId(user.uid, friend.id)}/messages`;
+
+  try {
+    const imageUrl = await uploadImage(file);
+    if (!imageUrl) return;
+
+    const messagesRef = collection(firestore, messagesPath);
+
+    await addDoc(messagesRef, {
+      text: "",               // ✅ text separate, keep empty for image message
+      imageUrl,               // ✅ image-only
+      timestamp: serverTimestamp(),
+      senderId: user.uid,
+      displayName: userProfile?.name || user?.displayName || "Anonymous",
+      photoURL: userProfile?.avatar || user?.photoURL || DEFAULT_PFP,
+      read: false,
+    });
+  } catch (err) {
+    console.error("Error sending image:", err);
+  }
+};
+
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -277,7 +310,7 @@ export default function Messages() {
         </div>
 
         <div className="input-box">
-          <MessageInput onSendMessage={sendMessage} onSendImage={sendImage} />
+          <MessageInput onSendMessage={sendMessage} onSendImage={sendImageOnly} />
         </div>
       </>
     );
