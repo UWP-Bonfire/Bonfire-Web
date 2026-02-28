@@ -10,7 +10,7 @@ import { firestore } from "../firebase.js";
 
 const DEFAULT_PFP = "/images/Default PFP.jpg";
 const SEND_ICON = "/images/arrow.png";
-const ATTACH_ICON = "/images/message.png";
+//const ATTACH_ICON = "/images/message.png";
 const BACK_ICON = "/images/right-arrow.png";
 const GLOBAL_ICON = "/images/icon11.png";
 
@@ -223,13 +223,15 @@ export default function Messages() {
     const { messages, loading: messagesLoading, sendMessage, sendImage, userProfiles, markMessageAsRead } =
   useChat(friend.id);
 
-  const { uploadImage } = useImageUpload();
+  const { uploadImage, isUploading, error } = useImageUpload();
 
 const getChatId = (uid1, uid2) => [uid1, uid2].sort().join("_");
 
 const sendImageOnly = async (file) => {
   if (!file || !user || !friend?.id) return;
   if (!file.type?.startsWith("image/")) return;
+
+  console.log("Picked file:", file.name, file.type);
 
   const isGlobalChat = friend.id === "global";
   const messagesPath = isGlobalChat
@@ -238,13 +240,14 @@ const sendImageOnly = async (file) => {
 
   try {
     const imageUrl = await uploadImage(file);
+    console.log("Uploaded URL:", imageUrl);
     if (!imageUrl) return;
 
     const messagesRef = collection(firestore, messagesPath);
 
     await addDoc(messagesRef, {
-      text: "",               // ✅ text separate, keep empty for image message
-      imageUrl,               // ✅ image-only
+      text: "",
+      imageUrl,
       timestamp: serverTimestamp(),
       senderId: user.uid,
       displayName: userProfile?.name || user?.displayName || "Anonymous",
@@ -309,8 +312,13 @@ const sendImageOnly = async (file) => {
           <div ref={messagesEndRef} />
         </div>
 
+            {error && <div style={{ color: "brown", padding: "6px 0" }}>{error}</div>}
+{isUploading && <div style={{ padding: "6px 0" }}>Uploading image...</div>}
+
         <div className="input-box">
           <MessageInput onSendMessage={sendMessage} onSendImage={sendImageOnly} />
+
+          
         </div>
       </>
     );
