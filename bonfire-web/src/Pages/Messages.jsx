@@ -4,13 +4,13 @@ import { useAuth } from "./hooks/useAuth";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
 import "../Styles/messages.css";
-
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import useImageUpload from "./hooks/useImageUpload";
+import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
 import { firestore } from "../firebase.js";
 
 const DEFAULT_PFP = "/images/Default PFP.jpg";
 const SEND_ICON = "/images/arrow.png";
-const ATTACH_ICON = "/images/message.png";
+//const ATTACH_ICON = "/images/message.png";
 const BACK_ICON = "/images/right-arrow.png";
 const GLOBAL_ICON = "/images/icon11.png";
 
@@ -18,33 +18,89 @@ const safeName = (obj) => obj?.name || obj?.username || obj?.displayName || "Ano
 const safeAvatar = (obj) => obj?.avatar || obj?.profileImage || DEFAULT_PFP;
 
 /* =========================
-   Message Input
+   Message Input (TEXT + IMAGE)
 ========================= */
-const MessageInput = ({ onSendMessage }) => {
+const MessageInput = ({ onSendMessage, onSendImage }) => {
   const [newMessage, setNewMessage] = useState("");
+  const fileRef = useRef(null);
+  const textareaRef = useRef(null);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const text = newMessage.trim();
-    if (!text) return;
-    onSendMessage(text);
-    setNewMessage("");
+  const autoGrow = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    autoGrow();
+  }, [newMessage]);
+
+  const handleSend = (e) => {
+    if (e) e.preventDefault();
+
+    const text = typeof newMessage === "string" ? newMessage.trim() : "";
+
+    // ✅ If text exists → send text
+    if (text) {
+      onSendMessage(text);
+      setNewMessage("");
+      return;
+    }
+
+    // ✅ If no text → open image picker
+    fileRef.current?.click();
+  };
+
+  // ✅ Enter = send, Shift+Enter = new line
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(); // send text or open image picker
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type?.startsWith("image/")) {
+      e.target.value = "";
+      return;
+    }
+
+    if (typeof onSendImage !== "function") {
+      console.error("onSendImage is not a function");
+      e.target.value = "";
+      return;
+    }
+
+    await onSendImage(file); // send image separately
+    e.target.value = "";
   };
 
   return (
-    <form className="chat-input" onSubmit={handleSubmit}>
-      <input
-        type="text"
+    <form className="chat-input" onSubmit={handleSend}>
+      <textarea
+        ref={textareaRef}
+        className="chat-textarea"
         value={newMessage}
         onChange={(e) => setNewMessage(e.target.value)}
+        onInput={autoGrow}
+        onKeyDown={handleKeyDown}
         placeholder="Type a message..."
+        rows={1}
+      />
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
       />
 
       <div className="icon-group">
-        <button className="icon-btn attach-btn" type="button">
-          <img src={ATTACH_ICON} alt="Add" />
-        </button>
-
         <button className="icon-btn send-btn" type="submit">
           <img src={SEND_ICON} alt="Send" />
         </button>
@@ -80,7 +136,17 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
 
       <div className="message-bubble">
         <span className="msg-name">{isSent ? (user.displayName || "You") : senderName}</span>
-        <div className="message-text">{message.text}</div>
+        {message.imageUrl && (
+  <img
+    src={message.imageUrl}
+    alt="Sent"
+    className="message-image"
+  />
+)}
+
+{message.text && (
+  <div className="message-text">{message.text}</div>
+)}
 
         <span className="msg-time">
           {formatTime(message.timestamp)}
@@ -153,8 +219,45 @@ export default function Messages() {
   const ChatView = ({ friend }) => {
     const isGlobalChat = friend.id === "global";
 
-    const { messages, loading: messagesLoading, sendMessage, userProfiles, markMessageAsRead } =
-      useChat(friend.id);
+
+    const { messages, loading: messagesLoading, sendMessage, sendImage, userProfiles, markMessageAsRead } =
+  useChat(friend.id);
+
+  const { uploadImage, isUploading, error } = useImageUpload();
+
+const getChatId = (uid1, uid2) => [uid1, uid2].sort().join("_");
+
+const sendImageOnly = async (file) => {
+  if (!file || !user || !friend?.id) return;
+  if (!file.type?.startsWith("image/")) return;
+
+  console.log("Picked file:", file.name, file.type);
+
+  const isGlobalChat = friend.id === "global";
+  const messagesPath = isGlobalChat
+    ? "messages"
+    : `chats/${getChatId(user.uid, friend.id)}/messages`;
+
+  try {
+    const imageUrl = await uploadImage(file);
+    console.log("Uploaded URL:", imageUrl);
+    if (!imageUrl) return;
+
+    const messagesRef = collection(firestore, messagesPath);
+
+    await addDoc(messagesRef, {
+      text: "",
+      imageUrl,
+      timestamp: serverTimestamp(),
+      senderId: user.uid,
+      displayName: userProfile?.name || user?.displayName || "Anonymous",
+      photoURL: userProfile?.avatar || user?.photoURL || DEFAULT_PFP,
+      read: false,
+    });
+  } catch (err) {
+    console.error("Error sending image:", err);
+  }
+};
 
     const messagesEndRef = useRef(null);
 
@@ -209,8 +312,13 @@ export default function Messages() {
           <div ref={messagesEndRef} />
         </div>
 
+            {error && <div style={{ color: "brown", padding: "6px 0" }}>{error}</div>}
+{isUploading && <div style={{ padding: "6px 0" }}>Uploading image...</div>}
+
         <div className="input-box">
-          <MessageInput onSendMessage={sendMessage} />
+          <MessageInput onSendMessage={sendMessage} onSendImage={sendImageOnly} />
+
+          
         </div>
       </>
     );
