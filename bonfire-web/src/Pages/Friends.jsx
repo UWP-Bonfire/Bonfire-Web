@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ReactComponent as SettingsIcon } from "../../public/icons/Settings.svg";
 import { useNavigate } from "react-router-dom";
 
 import useFriends from "./hooks/useFriends";
@@ -176,8 +177,8 @@ export default function Friends() {
         </div>
 
         <div className="bottom-section">
-          <div className="settings-btn" onClick={() => navigate("/account")}>
-            <img src="/icons/Settings.svg" alt="Settings" />
+          <div className="settings-btn" onClick={() => navigate("/settings")}> 
+            <SettingsIcon style={{ width: 28, height: 28 }} />
           </div>
 
           <div className="user" onClick={() => navigate("/account")}>

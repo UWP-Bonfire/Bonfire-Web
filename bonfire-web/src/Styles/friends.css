@@ -366,7 +366,7 @@ body {
   flex-direction: column;
   min-width: 160px;
   z-index: 9999;
-  pointer-events: auto;
+  pointer-events: none;
   top: 42px;
   opacity: 0;
   transform: translateY(-5px);
@@ -376,6 +376,7 @@ body {
 .context-menu.show {
   opacity: 1;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
 
