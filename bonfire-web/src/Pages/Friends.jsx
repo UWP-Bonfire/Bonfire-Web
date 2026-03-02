@@ -176,13 +176,13 @@ export default function Friends() {
             <img src="/icons/Settings.svg" alt="Settings" />
           </div>
 
-          <div className="user" onClick={() => navigate("/account")}>
+          <div className="user" onClick={() => navigate("/account")}> 
             <img
               src={userProfile?.avatar || user?.photoURL || "/images/bonfire.png"}
               alt="User"
               onError={(e) => (e.currentTarget.src = "/images/bonfire.png")}
             />
-            <span>{user?.displayName}</span>
+            <span style={{ display: "block", textAlign: "center", width: "100%" }}>{user?.displayName}</span>
           </div>
         </div>
       </div>
@@ -283,18 +283,8 @@ export default function Friends() {
                 onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
               />
 
-              {/* ✅ Click name → go to Messages.jsx for that friend */}
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={() => handleChatClick(friend.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") handleChatClick(friend.id);
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                {friend.name}
-              </span>
+              {/* Friend name is just text, not a DM link */}
+              <span style={{ display: "block", textAlign: "center", width: "100%" }}>{friend.name}</span>
 
               {/* ✅ Click message bubble → go to Messages.jsx for that friend */}
               <button

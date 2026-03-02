@@ -10,7 +10,6 @@ import { firestore } from "../firebase.js";
 
 const DEFAULT_PFP = "/images/Default PFP.jpg";
 const SEND_ICON = "/images/arrow.png";
-//const ATTACH_ICON = "/images/message.png";
 const BACK_ICON = "/images/right-arrow.png";
 const GLOBAL_ICON = "/images/icon11.png";
 
@@ -190,7 +189,7 @@ export default function Messages() {
 
   // Auto-select friend if navigated with state.friendId
   useEffect(() => {
-    if (!selectedFriend && location.state && location.state.friendId && normalizedFriends.length > 0) {
+    if (!selectedFriend && location.state?.friendId && normalizedFriends.length > 0) {
       const friendId = location.state.friendId;
       const found = normalizedFriends.find(f => f.id === friendId);
       if (found) setSelectedFriend(found);
@@ -215,7 +214,8 @@ export default function Messages() {
     return () => unsubscribes.forEach((u) => u());
   }, [normalizedFriends, user]);
 
-// Moved out from useEffect
+
+// Move handleUnreadSnapshot to outer scope
 function handleUnreadSnapshot(friend, setUnreadCounts) {
   return function (snapshot) {
     setUnreadCounts((prev) => ({
@@ -277,7 +277,8 @@ const sendImageOnly = async (file) => {
       markUnreadMessages(messages, user, markMessageAsRead);
     }, [messages, user?.uid, markMessageAsRead]);
 
-// Moved out from useEffect
+
+// Move markUnreadMessages to outer scope
 function markUnreadMessages(messages, user, markMessageAsRead) {
   if (!messages?.length) return;
   messages.forEach((m) => {
