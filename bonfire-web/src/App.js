@@ -7,10 +7,9 @@ import Welcome from "./Pages/Welcome";
 import AddFriends from "./Pages/AddFriends"; 
 import Account from "./Pages/Account";
 import GroupChats from "./Pages/GroupChats";
-
+import Settings from "./Pages/Settings";
 
 import Personalization from "./Pages/Personalization";
-
 
 function App() {
   return (
@@ -24,10 +23,11 @@ function App() {
         <Route path="/addfriends" element={<AddFriends />} /> 
         <Route path="/account" element={<Account />} />
         <Route path="/groupchats" element={<GroupChats />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/personalization" element={<Personalization />} />
       </Routes>
     </Router>
   );
 }
 
-export default App; 
+export default App;
