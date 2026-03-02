@@ -16,6 +16,15 @@ const GLOBAL_ICON = "/images/icon11.png";
 const safeName = (obj) => obj?.name || obj?.username || obj?.displayName || "Anonymous";
 const safeAvatar = (obj) => obj?.avatar || obj?.profileImage || DEFAULT_PFP;
 
+function handleUnreadSnapshot(friend, setUnreadCounts) {
+  return function (snapshot) {
+    setUnreadCounts((prev) => ({
+      ...prev,
+      [friend.id]: snapshot.size,
+    }));
+  };
+}
+
 /* =========================
    Message Input (TEXT + IMAGE)
 ========================= */
@@ -211,21 +220,20 @@ export default function Messages() {
       return onSnapshot(q, handleUnreadSnapshot(friend, setUnreadCounts));
     });
 
-    return () => unsubscribes.forEach((u) => u());
-  }, [normalizedFriends, user]);
+  return () => unsubscribes.forEach((u) => u());
+}, [normalizedFriends, user]);
 
+const handleBack = () => navigate("/friends");
 
-// Move handleUnreadSnapshot to outer scope
-function handleUnreadSnapshot(friend, setUnreadCounts) {
-  return function (snapshot) {
-    setUnreadCounts((prev) => ({
-      ...prev,
-      [friend.id]: snapshot.size,
-    }));
-  };
+function markUnreadMessages(messages, user, markMessageAsRead) {
+  if (!messages?.length) return;
+  messages.forEach((m) => {
+    if (m.senderId !== user.uid && !m.read) {
+      const idToMark = m.id || m.docId || m.messageId;
+      if (idToMark) markMessageAsRead(idToMark);
+    }
+  });
 }
-
-  const handleBack = () => navigate("/friends");
 
   const ChatView = ({ friend }) => {
     const isGlobalChat = friend.id === "global";
@@ -272,24 +280,12 @@ const sendImageOnly = async (file) => {
 
     const messagesEndRef = useRef(null);
 
-    useEffect(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-      markUnreadMessages(messages, user, markMessageAsRead);
-    }, [messages, user?.uid, markMessageAsRead]);
+useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  markUnreadMessages(messages, user, markMessageAsRead);
+}, [messages, user?.uid, markMessageAsRead]);
 
-
-// Move markUnreadMessages to outer scope
-function markUnreadMessages(messages, user, markMessageAsRead) {
-  if (!messages?.length) return;
-  messages.forEach((m) => {
-    if (m.senderId !== user.uid && !m.read) {
-      const idToMark = m.id || m.docId || m.messageId;
-      if (idToMark) markMessageAsRead(idToMark);
-    }
-  });
-}
-
-    return (
+return (
       <>
         <div className="chat-header" style={{ justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
