@@ -191,24 +191,25 @@ export default function Messages() {
   useEffect(() => {
     if (!user || normalizedFriends.length === 0) return;
 
+    function handleUnreadSnapshot(friend) {
+      return function (snapshot) {
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [friend.id]: snapshot.size,
+        }));
+      };
+    }
+
     const unsubscribes = normalizedFriends.map((friend) => {
       if (friend.isMuted) return () => {};
-
-      const chatId = [user.uid, friend.id].sort().join("_");
+      const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
       const messagesRef = collection(firestore, "chats", chatId, "messages");
-
       const q = query(
         messagesRef,
         where("read", "==", false),
         where("senderId", "==", friend.id)
       );
-
-      return onSnapshot(q, (snapshot) => {
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [friend.id]: snapshot.size,
-        }));
-      });
+      return onSnapshot(q, handleUnreadSnapshot(friend));
     });
 
     return () => unsubscribes.forEach((u) => u());
@@ -225,7 +226,7 @@ export default function Messages() {
 
   const { uploadImage, isUploading, error } = useImageUpload();
 
-const getChatId = (uid1, uid2) => [uid1, uid2].sort().join("_");
+const getChatId = (uid1, uid2) => [uid1, uid2].sort((a, b) => a.localeCompare(b)).join("_");
 
 const sendImageOnly = async (file) => {
   if (!file || !user || !friend?.id) return;
@@ -264,8 +265,8 @@ const sendImageOnly = async (file) => {
     useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
 
-      // ✅ IMPORTANT: mark unread incoming messages as read using the correct id
-      if (messages?.length) {
+      function markUnreadMessages(messages, user, markMessageAsRead) {
+        if (!messages?.length) return;
         messages.forEach((m) => {
           if (m.senderId !== user.uid && !m.read) {
             const idToMark = m.id || m.docId || m.messageId;
@@ -273,6 +274,8 @@ const sendImageOnly = async (file) => {
           }
         });
       }
+
+      markUnreadMessages(messages, user, markMessageAsRead);
     }, [messages, user?.uid, markMessageAsRead]);
 
     return (

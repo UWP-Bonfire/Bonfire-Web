@@ -11,8 +11,10 @@ export const compareChatsByRecent = (a, b) => {
 const useChatSettings = () => {
     const { user } = useAuth();
 
+    // Custom compare function: always put user.uid first
     const getChatId = (uid1, uid2) => {
-        return [uid1, uid2].sort().join('_');
+        // If you want a different order, adjust this logic
+        return `${uid1}_${uid2}`;
     };
 
     const toggleLimit = async (friendId, currentStatus) => {

@@ -49,21 +49,20 @@ export default function Friends() {
   useEffect(() => {
     if (!user || friends.length === 0) return;
 
-    function handleSnapshot(friend) {
-      return function (snap) {
-        setChatLimits((prev) => ({
-          ...prev,
-          [friend.id]: snap.data()?.limitNotifications || false,
-        }));
-      };
+    function setLimitNotifications(friend, snap) {
+      setChatLimits((prev) => ({
+        ...prev,
+        [friend.id]: snap.data()?.limitNotifications || false,
+      }));
     }
 
-    const unsubscribes = friends.map((friend) => {
+    function subscribeLimitNotifications(friend) {
       const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
       const chatRef = doc(firestore, "chats", chatId);
-      return onSnapshot(chatRef, handleSnapshot(friend));
-    });
+      return onSnapshot(chatRef, (snap) => setLimitNotifications(friend, snap));
+    }
 
+    const unsubscribes = friends.map(subscribeLimitNotifications);
     return () => unsubscribes.forEach((u) => u());
   }, [friends, user]);
 
@@ -71,16 +70,14 @@ export default function Friends() {
   useEffect(() => {
     if (!user || friends.length === 0) return;
 
-    function handleUnreadSnapshot(friend) {
-      return function (snapshot) {
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [friend.id]: snapshot.size,
-        }));
-      };
+    function setUnreadCount(friend, snapshot) {
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [friend.id]: snapshot.size,
+      }));
     }
 
-    const unsubscribes = friends.map((friend) => {
+    function subscribeUnreadCount(friend) {
       const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
       const messagesRef = collection(firestore, "chats", chatId, "messages");
       const q = query(
@@ -88,9 +85,10 @@ export default function Friends() {
         where("read", "==", false),
         where("senderId", "==", friend.id)
       );
-      return onSnapshot(q, handleUnreadSnapshot(friend));
-    });
+      return onSnapshot(q, (snapshot) => setUnreadCount(friend, snapshot));
+    }
 
+    const unsubscribes = friends.map(subscribeUnreadCount);
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [friends, user]);
 
