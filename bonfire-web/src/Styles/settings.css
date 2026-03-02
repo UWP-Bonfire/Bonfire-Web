@@ -45,6 +45,7 @@
 .settings-section h2 {
   color: var(--header-bg);
   margin-bottom: 8px;
+  text-align: center;
 }
 
 .settings-section p {
@@ -52,7 +53,7 @@
   margin-bottom: 12px;
 }
 
-/* Example input styling */
+
 .settings-section input,
 .settings-section select {
   background: var(--input-bg);
@@ -79,3 +80,30 @@
 .settings-section button:hover {
   background: var(--accent-2);
 }
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-1);
+  color: var(--header-bg);
+  border: none;
+  border-radius: 8px;
+  padding: 18px 80px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 auto 24px auto;
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.back-btn span {
+  width: 100%;
+  text-align: center;
+  font-size: 1.35rem;
+
+}
+

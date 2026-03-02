@@ -156,11 +156,7 @@ export default function Friends() {
 
         <div className="dm-list">
           {visibleFriends.map((friend) => (
-            <div
-              className="dm"
-              key={friend.id}
-              onClick={() => handleChatClick(friend.id)}
-            >
+            <div className="dm" key={friend.id} onClick={() => handleChatClick(friend.id)}>
               <div className="dm-avatar">
                 <img
                   src={friend.avatar || DEFAULT_AVATAR}
@@ -176,7 +172,7 @@ export default function Friends() {
         </div>
 
         <div className="bottom-section">
-          <div className="settings-btn" onClick={() => navigate("/settings")}> 
+          <div className="settings-btn" onClick={() => navigate("/settings")}>
             <img src="/icons/Settings.svg" alt="Settings" />
           </div>
 
@@ -199,10 +195,7 @@ export default function Friends() {
           <div className="header-right">
             {/* Bell notifications kept */}
             <div className="notif-container">
-              <button
-                className="notif-btn"
-                onClick={() => setShowNotifications((s) => !s)}
-              >
+              <button className="notif-btn" onClick={() => setShowNotifications((s) => !s)}>
                 <img src="/icons/Bell.png" alt="Notifications" />
                 {friendRequests.length > 0 && <span className="notif-dot"></span>}
               </button>
@@ -290,14 +283,31 @@ export default function Friends() {
                 onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
               />
 
-              <span>{friend.name}</span>
+              {/* ✅ Click name → go to Messages.jsx for that friend */}
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={() => handleChatClick(friend.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") handleChatClick(friend.id);
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                {friend.name}
+              </span>
 
-              <button className="chat-btn" onClick={() => handleChatClick(friend.id)}>
+              {/* ✅ Click message bubble → go to Messages.jsx for that friend */}
+              <button
+                type="button"
+                className="chat-btn"
+                onClick={() => handleChatClick(friend.id)}
+              >
                 💬
               </button>
 
               <div className="options-wrapper">
                 <button
+                  type="button"
                   className="options-btn"
                   onClick={() =>
                     setActiveOptionsMenu(activeOptionsMenu === friend.id ? null : friend.id)
@@ -307,19 +317,19 @@ export default function Friends() {
                 </button>
 
                 <div className={`context-menu ${activeOptionsMenu === friend.id ? "show" : ""}`}>
-                  <button className="menu-item" onClick={() => handleUnfriend(friend.id)}>
+                  <button type="button" className="menu-item" onClick={() => handleUnfriend(friend.id)}>
                     Unfriend
                   </button>
 
-                  <button className="menu-item" onClick={() => handleMuteToggle(friend)}>
+                  <button type="button" className="menu-item" onClick={() => handleMuteToggle(friend)}>
                     {friend.isMuted ? "Unmute" : "Mute"}
                   </button>
 
-                  <button className="menu-item" onClick={() => handleLimitToggle(friend.id)}>
+                  <button type="button" className="menu-item" onClick={() => handleLimitToggle(friend.id)}>
                     {chatLimits[friend.id] ? "Disable Limit" : "Limit Notifications"}
                   </button>
 
-                  <button className="menu-item" onClick={() => handleBlockToggle(friend.id)}>
+                  <button type="button" className="menu-item" onClick={() => handleBlockToggle(friend.id)}>
                     {blockedUsers.includes(friend.id) ? "Unblock" : "Block"}
                   </button>
                 </div>

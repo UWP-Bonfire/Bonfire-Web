@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
@@ -169,11 +169,11 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
 
 export default function Messages() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, userProfile } = useAuth();
   const { friends, loading: friendsLoading } = useFriends();
 
   const myAvatar = userProfile?.avatar || user?.photoURL || DEFAULT_PFP;
-
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
 
@@ -188,17 +188,17 @@ export default function Messages() {
     [friends]
   );
 
+  // Auto-select friend if navigated with state.friendId
+  useEffect(() => {
+    if (!selectedFriend && location.state && location.state.friendId && normalizedFriends.length > 0) {
+      const friendId = location.state.friendId;
+      const found = normalizedFriends.find(f => f.id === friendId);
+      if (found) setSelectedFriend(found);
+    }
+  }, [normalizedFriends, selectedFriend, location.state]);
+
   useEffect(() => {
     if (!user || normalizedFriends.length === 0) return;
-
-    function handleUnreadSnapshot(friend) {
-      return function (snapshot) {
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [friend.id]: snapshot.size,
-        }));
-      };
-    }
 
     const unsubscribes = normalizedFriends.map((friend) => {
       if (friend.isMuted) return () => {};
@@ -209,11 +209,21 @@ export default function Messages() {
         where("read", "==", false),
         where("senderId", "==", friend.id)
       );
-      return onSnapshot(q, handleUnreadSnapshot(friend));
+      return onSnapshot(q, handleUnreadSnapshot(friend, setUnreadCounts));
     });
 
     return () => unsubscribes.forEach((u) => u());
   }, [normalizedFriends, user]);
+
+// Moved out from useEffect
+function handleUnreadSnapshot(friend, setUnreadCounts) {
+  return function (snapshot) {
+    setUnreadCounts((prev) => ({
+      ...prev,
+      [friend.id]: snapshot.size,
+    }));
+  };
+}
 
   const handleBack = () => navigate("/friends");
 
@@ -264,19 +274,19 @@ const sendImageOnly = async (file) => {
 
     useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-
-      function markUnreadMessages(messages, user, markMessageAsRead) {
-        if (!messages?.length) return;
-        messages.forEach((m) => {
-          if (m.senderId !== user.uid && !m.read) {
-            const idToMark = m.id || m.docId || m.messageId;
-            if (idToMark) markMessageAsRead(idToMark);
-          }
-        });
-      }
-
       markUnreadMessages(messages, user, markMessageAsRead);
     }, [messages, user?.uid, markMessageAsRead]);
+
+// Moved out from useEffect
+function markUnreadMessages(messages, user, markMessageAsRead) {
+  if (!messages?.length) return;
+  messages.forEach((m) => {
+    if (m.senderId !== user.uid && !m.read) {
+      const idToMark = m.id || m.docId || m.messageId;
+      if (idToMark) markMessageAsRead(idToMark);
+    }
+  });
+}
 
     return (
       <>
