@@ -165,18 +165,18 @@ export default function Friends() {
         </div>
 
         <div className="bottom-section">
-          <div className="settings-btn" onClick={() => navigate("/account")}>
+          <button className="settings-btn" onClick={() => navigate("/account")}>
             <img src="/icons/Settings.svg" alt="Settings" />
-          </div>
+          </button>
 
-          <div className="user" onClick={() => navigate("/account")}>
+          <button className="user" onClick={() => navigate("/account")}>
             <img
               src={userProfile?.avatar || user?.photoURL || "/images/bonfire.png"}
               alt="User"
               onError={(e) => (e.currentTarget.src = "/images/bonfire.png")}
             />
             <span>{user?.displayName}</span>
-          </div>
+          </button>
         </div>
       </div>
 

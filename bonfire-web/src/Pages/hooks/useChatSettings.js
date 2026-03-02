@@ -16,14 +16,14 @@ const useChatSettings = () => {
 
         try {
             const chatSnap = await getDoc(chatRef);
-            if (!chatSnap.exists()) {
+            if (chatSnap.exists()) {
+                await updateDoc(chatRef, { limitNotifications: !currentStatus });
+            } else {
                 await setDoc(chatRef, { 
                     limitNotifications: !currentStatus,
                     users: [user.uid, friendId],
                     consecutiveUnread: { [user.uid]: 0, [friendId]: 0 }
                 });
-            } else {
-                await updateDoc(chatRef, { limitNotifications: !currentStatus });
             }
         } catch (error) {
             console.error("Error toggling notification limit: ", error);
