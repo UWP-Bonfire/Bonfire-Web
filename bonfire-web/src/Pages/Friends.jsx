@@ -135,7 +135,14 @@ export default function Friends() {
   if (error) return <div>{error}</div>;
 
   // ✅ hide blocked users
-  const visibleFriends = friends.filter((f) => !blockedUsers.includes(f.id));
+  const visibleFriends = friends
+    .filter((f) => !blockedUsers.includes(f.id))
+    .sort((a, b) => {
+      // Sort by unread message count (descending)
+      const unreadA = unreadCounts[a.id] || 0;
+      const unreadB = unreadCounts[b.id] || 0;
+      return unreadB - unreadA;
+    });
 
   return (
     <div className="container">
@@ -145,7 +152,7 @@ export default function Friends() {
 
         <div className="dm-list">
           {visibleFriends.map((friend) => (
-            <button
+            <div
               className="dm"
               key={friend.id}
               onClick={() => handleChatClick(friend.id)}
@@ -160,23 +167,23 @@ export default function Friends() {
               </div>
 
               <span className="dm-name">{friend.name}</span>
-            </button>
+            </div>
           ))}
         </div>
 
         <div className="bottom-section">
-          <button className="settings-btn" onClick={() => navigate("/account")}>
+          <div className="settings-btn" onClick={() => navigate("/account")}>
             <img src="/icons/Settings.svg" alt="Settings" />
-          </button>
+          </div>
 
-          <button className="user" onClick={() => navigate("/account")}>
+          <div className="user" onClick={() => navigate("/account")}>
             <img
               src={userProfile?.avatar || user?.photoURL || "/images/bonfire.png"}
               alt="User"
               onError={(e) => (e.currentTarget.src = "/images/bonfire.png")}
             />
             <span>{user?.displayName}</span>
-          </button>
+          </div>
         </div>
       </div>
 
@@ -228,12 +235,13 @@ export default function Friends() {
         <div className="friend-requests-container">
           <h3>Friend Requests</h3>
 
-          {reqLoading && <p>Loading...</p>}
-          {reqError && <p>Error: {reqError}</p>}
-          {!reqLoading && !reqError && friendRequests.length === 0 && (
+          {reqLoading ? (
+            <p>Loading...</p>
+          ) : reqError ? (
+            <p>Error: {reqError}</p>
+          ) : friendRequests.length === 0 ? (
             <p>You have no pending friend requests.</p>
-          )}
-          {!reqLoading && !reqError && friendRequests.length > 0 && (
+          ) : (
             <ul className="friend-requests-list">
               {friendRequests.map((request) => (
                 <li key={request.id} className="friend-request-item">
