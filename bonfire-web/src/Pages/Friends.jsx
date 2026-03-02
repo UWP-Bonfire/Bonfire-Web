@@ -145,7 +145,7 @@ export default function Friends() {
 
         <div className="dm-list">
           {visibleFriends.map((friend) => (
-            <div
+            <button
               className="dm"
               key={friend.id}
               onClick={() => handleChatClick(friend.id)}
@@ -160,7 +160,7 @@ export default function Friends() {
               </div>
 
               <span className="dm-name">{friend.name}</span>
-            </div>
+            </button>
           ))}
         </div>
 
@@ -228,13 +228,12 @@ export default function Friends() {
         <div className="friend-requests-container">
           <h3>Friend Requests</h3>
 
-          {reqLoading ? (
-            <p>Loading...</p>
-          ) : reqError ? (
-            <p>Error: {reqError}</p>
-          ) : friendRequests.length === 0 ? (
+          {reqLoading && <p>Loading...</p>}
+          {reqError && <p>Error: {reqError}</p>}
+          {!reqLoading && !reqError && friendRequests.length === 0 && (
             <p>You have no pending friend requests.</p>
-          ) : (
+          )}
+          {!reqLoading && !reqError && friendRequests.length > 0 && (
             <ul className="friend-requests-list">
               {friendRequests.map((request) => (
                 <li key={request.id} className="friend-request-item">
