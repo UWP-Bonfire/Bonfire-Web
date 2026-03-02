@@ -49,16 +49,19 @@ export default function Friends() {
   useEffect(() => {
     if (!user || friends.length === 0) return;
 
-    const unsubscribes = friends.map((friend) => {
-      const chatId = [user.uid, friend.id].sort().join("_");
-      const chatRef = doc(firestore, "chats", chatId);
-
-      return onSnapshot(chatRef, (snap) => {
+    function handleSnapshot(friend) {
+      return function (snap) {
         setChatLimits((prev) => ({
           ...prev,
           [friend.id]: snap.data()?.limitNotifications || false,
         }));
-      });
+      };
+    }
+
+    const unsubscribes = friends.map((friend) => {
+      const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
+      const chatRef = doc(firestore, "chats", chatId);
+      return onSnapshot(chatRef, handleSnapshot(friend));
     });
 
     return () => unsubscribes.forEach((u) => u());
@@ -68,28 +71,31 @@ export default function Friends() {
   useEffect(() => {
     if (!user || friends.length === 0) return;
 
+    function handleUnreadSnapshot(friend) {
+      return function (snapshot) {
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [friend.id]: snapshot.size,
+        }));
+      };
+    }
+
     const unsubscribes = friends.map((friend) => {
-      const chatId = [user.uid, friend.id].sort().join("_");
+      const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
       const messagesRef = collection(firestore, "chats", chatId, "messages");
       const q = query(
         messagesRef,
         where("read", "==", false),
         where("senderId", "==", friend.id)
       );
-
-      return onSnapshot(q, (snapshot) => {
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [friend.id]: snapshot.size,
-        }));
-      });
+      return onSnapshot(q, handleUnreadSnapshot(friend));
     });
 
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [friends, user]);
 
   const handleChatClick = (friendId) => {
-    navigate("/app/chat", { state: { friendId } });
+    navigate("/messages", { state: { friendId } });
   };
 
   const handleBlockToggle = (friendId) => {
