@@ -5,10 +5,12 @@ import useFriends from "./hooks/useFriends";
 import useFriendRequests from "./hooks/useFriendRequests";
 import { useAuth } from "./hooks/useAuth";
 import useNotifications from "./hooks/useNotifications";
+import useBlockUser from "./hooks/useBlockUser";
+import useChatSettings from "./hooks/useChatSettings";
 
 import { auth, firestore } from "../firebase";
 import { signOut } from "firebase/auth";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
 
 import "../Styles/friends.css";
 
@@ -17,7 +19,7 @@ const DEFAULT_AVATAR = "/images/default-avatar.png";
 export default function Friends() {
   const navigate = useNavigate();
 
-  const { friends, loading, error } = useFriends();
+  const { friends, loading, error, unfriend, muteUser, unmuteUser } = useFriends();
   const { user, userProfile } = useAuth();
 
   const { requestPermission } = useNotifications();
@@ -30,14 +32,37 @@ export default function Friends() {
     declineRequest,
   } = useFriendRequests();
 
+  const { toggleLimit } = useChatSettings();
+  const { blockUser, unblockUser, blockedUsers } = useBlockUser();
+
   const [unreadCounts, setUnreadCounts] = useState({});
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeOptionsMenu, setActiveOptionsMenu] = useState(null);
 
+  const [chatLimits, setChatLimits] = useState({});
 
   useEffect(() => {
     requestPermission();
   }, [requestPermission]);
+
+  // ✅ Track per-friend "Limit Notifications" flag from chat doc
+  useEffect(() => {
+    if (!user || friends.length === 0) return;
+
+    const unsubscribes = friends.map((friend) => {
+      const chatId = [user.uid, friend.id].sort().join("_");
+      const chatRef = doc(firestore, "chats", chatId);
+
+      return onSnapshot(chatRef, (snap) => {
+        setChatLimits((prev) => ({
+          ...prev,
+          [friend.id]: snap.data()?.limitNotifications || false,
+        }));
+      });
+    });
+
+    return () => unsubscribes.forEach((u) => u());
+  }, [friends, user]);
 
   // unread message dots in sidebar
   useEffect(() => {
@@ -63,6 +88,40 @@ export default function Friends() {
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [friends, user]);
 
+  const handleChatClick = (friendId) => {
+    navigate("/app/chat", { state: { friendId } });
+  };
+
+  const handleBlockToggle = (friendId) => {
+    if (blockedUsers.includes(friendId)) {
+      unblockUser(friendId);
+    } else {
+      blockUser(friendId);
+    }
+    setActiveOptionsMenu(null);
+  };
+
+  const handleMuteToggle = (friend) => {
+    if (friend.isMuted) {
+      unmuteUser(friend.id);
+    } else {
+      muteUser(friend.id);
+    }
+    setActiveOptionsMenu(null);
+  };
+
+  const handleLimitToggle = (friendId) => {
+    toggleLimit(friendId, chatLimits[friendId]);
+    setActiveOptionsMenu(null);
+  };
+
+  const handleUnfriend = (friendId) => {
+    if (window.confirm("Are you sure you want to unfriend this user?")) {
+      unfriend(friendId);
+      setActiveOptionsMenu(null);
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -75,6 +134,9 @@ export default function Friends() {
   if (loading) return <div>Loading friends...</div>;
   if (error) return <div>{error}</div>;
 
+  // ✅ hide blocked users
+  const visibleFriends = friends.filter((f) => !blockedUsers.includes(f.id));
+
   return (
     <div className="container">
       {/* Sidebar */}
@@ -82,11 +144,11 @@ export default function Friends() {
         <h2>Direct Messages</h2>
 
         <div className="dm-list">
-          {friends.map((friend) => (
+          {visibleFriends.map((friend) => (
             <div
               className="dm"
               key={friend.id}
-              onClick={() => navigate("/messages")}
+              onClick={() => handleChatClick(friend.id)}
             >
               <div className="dm-avatar">
                 <img
@@ -94,9 +156,7 @@ export default function Friends() {
                   alt={friend.name}
                   onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
                 />
-                {unreadCounts[friend.id] > 0 && (
-                  <span className="unread-dot"></span>
-                )}
+                {unreadCounts[friend.id] > 0 && <span className="unread-dot"></span>}
               </div>
 
               <span className="dm-name">{friend.name}</span>
@@ -133,9 +193,7 @@ export default function Friends() {
                 onClick={() => setShowNotifications((s) => !s)}
               >
                 <img src="/icons/Bell.png" alt="Notifications" />
-                {friendRequests.length > 0 && (
-                  <span className="notif-dot"></span>
-                )}
+                {friendRequests.length > 0 && <span className="notif-dot"></span>}
               </button>
 
               {showNotifications && (
@@ -156,10 +214,7 @@ export default function Friends() {
               )}
             </div>
 
-            <button
-              className="add-friend"
-              onClick={() => navigate("/addfriends")}
-            >
+            <button className="add-friend" onClick={() => navigate("/addfriends")}>
               Add Friend
             </button>
 
@@ -169,7 +224,7 @@ export default function Friends() {
           </div>
         </div>
 
-        {/* ✅ Friend Requests card (added) */}
+        {/* Friend Requests */}
         <div className="friend-requests-container">
           <h3>Friend Requests</h3>
 
@@ -216,7 +271,7 @@ export default function Friends() {
 
         {/* Friends list */}
         <div className="friends-container">
-          {friends.map((friend) => (
+          {visibleFriends.map((friend) => (
             <div className="friend-card" key={friend.id}>
               <img
                 src={friend.avatar || DEFAULT_AVATAR}
@@ -226,33 +281,38 @@ export default function Friends() {
 
               <span>{friend.name}</span>
 
-              <button className="chat-btn" onClick={() => navigate("/messages")}>
+              <button className="chat-btn" onClick={() => handleChatClick(friend.id)}>
                 💬
               </button>
 
               <div className="options-wrapper">
-  <button
-    className="options-btn"
-    onClick={() =>
-      setActiveOptionsMenu(
-        activeOptionsMenu === friend.id ? null : friend.id
-      )
-    }
-  >
-    ⋮
-  </button>
+                <button
+                  className="options-btn"
+                  onClick={() =>
+                    setActiveOptionsMenu(activeOptionsMenu === friend.id ? null : friend.id)
+                  }
+                >
+                  ⋮
+                </button>
 
-  <div
-    className={`context-menu ${
-      activeOptionsMenu === friend.id ? "show" : ""
-    }`}
-  >
-    <button className="menu-item">Mute Chat</button>
-    <hr />
-    <button className="menu-item danger">Remove Friend</button>
-  </div>
-</div>
+                <div className={`context-menu ${activeOptionsMenu === friend.id ? "show" : ""}`}>
+                  <button className="menu-item" onClick={() => handleUnfriend(friend.id)}>
+                    Unfriend
+                  </button>
 
+                  <button className="menu-item" onClick={() => handleMuteToggle(friend)}>
+                    {friend.isMuted ? "Unmute" : "Mute"}
+                  </button>
+
+                  <button className="menu-item" onClick={() => handleLimitToggle(friend.id)}>
+                    {chatLimits[friend.id] ? "Disable Limit" : "Limit Notifications"}
+                  </button>
+
+                  <button className="menu-item" onClick={() => handleBlockToggle(friend.id)}>
+                    {blockedUsers.includes(friend.id) ? "Unblock" : "Block"}
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
