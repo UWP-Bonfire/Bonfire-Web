@@ -298,7 +298,7 @@ return (
             <span>{isGlobalChat ? "Global Chat Room" : `Chat with ${friend.name}`}</span>
           </div>
 
-          <button className="back-btn" onClick={handleBack}>
+          <button className="messages-back-btn" onClick={handleBack}>
             <img src={BACK_ICON} alt="Back" />
           </button>
         </div>
