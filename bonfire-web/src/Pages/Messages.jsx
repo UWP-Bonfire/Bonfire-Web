@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
@@ -10,12 +10,20 @@ import { firestore } from "../firebase.js";
 
 const DEFAULT_PFP = "/images/Default PFP.jpg";
 const SEND_ICON = "/images/arrow.png";
-//const ATTACH_ICON = "/images/message.png";
 const BACK_ICON = "/images/right-arrow.png";
 const GLOBAL_ICON = "/images/icon11.png";
 
 const safeName = (obj) => obj?.name || obj?.username || obj?.displayName || "Anonymous";
 const safeAvatar = (obj) => obj?.avatar || obj?.profileImage || DEFAULT_PFP;
+
+function handleUnreadSnapshot(friend, setUnreadCounts) {
+  return function (snapshot) {
+    setUnreadCounts((prev) => ({
+      ...prev,
+      [friend.id]: snapshot.size,
+    }));
+  };
+}
 
 /* =========================
    Message Input (TEXT + IMAGE)
@@ -169,11 +177,11 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
 
 export default function Messages() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, userProfile } = useAuth();
   const { friends, loading: friendsLoading } = useFriends();
 
   const myAvatar = userProfile?.avatar || user?.photoURL || DEFAULT_PFP;
-
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
 
@@ -188,17 +196,17 @@ export default function Messages() {
     [friends]
   );
 
+  // Auto-select friend if navigated with state.friendId
+  useEffect(() => {
+    if (!selectedFriend && location.state?.friendId && normalizedFriends.length > 0) {
+      const friendId = location.state.friendId;
+      const found = normalizedFriends.find(f => f.id === friendId);
+      if (found) setSelectedFriend(found);
+    }
+  }, [normalizedFriends, selectedFriend, location.state]);
+
   useEffect(() => {
     if (!user || normalizedFriends.length === 0) return;
-
-    function handleUnreadSnapshot(friend) {
-      return function (snapshot) {
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [friend.id]: snapshot.size,
-        }));
-      };
-    }
 
     const unsubscribes = normalizedFriends.map((friend) => {
       if (friend.isMuted) return () => {};
@@ -209,13 +217,23 @@ export default function Messages() {
         where("read", "==", false),
         where("senderId", "==", friend.id)
       );
-      return onSnapshot(q, handleUnreadSnapshot(friend));
+      return onSnapshot(q, handleUnreadSnapshot(friend, setUnreadCounts));
     });
 
-    return () => unsubscribes.forEach((u) => u());
-  }, [normalizedFriends, user]);
+  return () => unsubscribes.forEach((u) => u());
+}, [normalizedFriends, user]);
 
-  const handleBack = () => navigate("/friends");
+const handleBack = () => navigate("/friends");
+
+function markUnreadMessages(messages, user, markMessageAsRead) {
+  if (!messages?.length) return;
+  messages.forEach((m) => {
+    if (m.senderId !== user.uid && !m.read) {
+      const idToMark = m.id || m.docId || m.messageId;
+      if (idToMark) markMessageAsRead(idToMark);
+    }
+  });
+}
 
   const ChatView = ({ friend }) => {
     const isGlobalChat = friend.id === "global";
@@ -262,23 +280,12 @@ const sendImageOnly = async (file) => {
 
     const messagesEndRef = useRef(null);
 
-    useEffect(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  markUnreadMessages(messages, user, markMessageAsRead);
+}, [messages, user?.uid, markMessageAsRead]);
 
-      function markUnreadMessages(messages, user, markMessageAsRead) {
-        if (!messages?.length) return;
-        messages.forEach((m) => {
-          if (m.senderId !== user.uid && !m.read) {
-            const idToMark = m.id || m.docId || m.messageId;
-            if (idToMark) markMessageAsRead(idToMark);
-          }
-        });
-      }
-
-      markUnreadMessages(messages, user, markMessageAsRead);
-    }, [messages, user?.uid, markMessageAsRead]);
-
-    return (
+return (
       <>
         <div className="chat-header" style={{ justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -291,7 +298,7 @@ const sendImageOnly = async (file) => {
             <span>{isGlobalChat ? "Global Chat Room" : `Chat with ${friend.name}`}</span>
           </div>
 
-          <button className="back-btn" onClick={handleBack}>
+          <button className="messages-back-btn" onClick={handleBack}>
             <img src={BACK_ICON} alt="Back" />
           </button>
         </div>

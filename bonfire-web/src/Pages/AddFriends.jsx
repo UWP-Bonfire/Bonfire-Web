@@ -99,7 +99,6 @@ function AddFriends() {
                 ))}
             </div>
             <button onClick={handleGoBack} className="back-btn">
-                <span>&larr;</span>
                 <span>Back to Home</span>
             </button>
         </div>

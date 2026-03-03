@@ -216,11 +216,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 48px;
+  height: 48px;
 }
 
 .icon-btn img {
-  width: 28px;
-  height: 28px;
+  width: 100%;
+  height: auto;
+  max-width: 28px;
+  max-height: 28px;
 }
 
 .icon-btn:hover {
@@ -230,12 +234,16 @@
 /* Image icon */
 .attach-btn img {
   filter: brightness(1.2);
+  width: 100%;
+  height: auto;
+  max-width: 40px;
+  max-height: 40px;
 }
 
 /* Send arrow icon */
 .send-btn img {
   background: var(--accent-1);
-  padding: 8px;
+  padding: 22px;
   border-radius: 50%;
   transition: background 0.3s;
 }
@@ -248,31 +256,41 @@
   display: none;
 }
 
-/* Back Button */
-.back-btn {
+/* Messages Back Button */
+.messages-back-btn {
   border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   background: var(--header-bg);
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s, transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: auto;
+  margin-right: 0;
+  position: relative;
+  right: 0;
+  top: 0;
+  z-index: 2;
 }
 
-.back-btn:hover {
-  background: var(--back-hover); /* was #5a3d31 */
-  transform: scale(1.05);
+.messages-back-btn:hover {
+  background: var(--back-hover);
+  transform: scale(0.5);
 }
 
-.back-btn img {
-  width: 14px;
-  height: 14px;
+.messages-back-btn img {
+  width: 10px;
+  height: 10px;
   filter: brightness(1.2);
   transform: rotate(180deg);
 }
+
 
 /* Read Receipts */
 .msg-time {

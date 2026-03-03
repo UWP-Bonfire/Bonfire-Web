@@ -116,17 +116,25 @@
 
 /* BACK BUTTON */
 .back-btn {
-  margin-top: 40px;
-  background-color: var(--header-bg);
+  margin-top: 48px;
+  margin-bottom: 24px;
+  background: var(--header-bg);
   color: var(--header-text);
   border: none;
-  padding: 12px 28px;
-  border-radius: 10px;
-  font-size: 1rem;
+  padding: 14px 36px;
+  border-radius: 18px;
+  font-size: 1.12rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.02em;
 }
 
 .back-btn:hover {
-  background-color: var(--sidebar-hover);
+  background: var(--sidebar-hover);
+  transform: scale(1.04);
 }
