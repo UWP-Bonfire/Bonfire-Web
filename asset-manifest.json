@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/Bonfire-Web/static/css/main.972d1a26.css",
-    "main.js": "/Bonfire-Web/static/js/main.7a63d81f.js",
+    "main.js": "/Bonfire-Web/static/js/main.877cce85.js",
     "index.html": "/Bonfire-Web/index.html",
     "main.972d1a26.css.map": "/Bonfire-Web/static/css/main.972d1a26.css.map",
-    "main.7a63d81f.js.map": "/Bonfire-Web/static/js/main.7a63d81f.js.map"
+    "main.877cce85.js.map": "/Bonfire-Web/static/js/main.877cce85.js.map"
   },
   "entrypoints": [
     "static/css/main.972d1a26.css",
-    "static/js/main.7a63d81f.js"
+    "static/js/main.877cce85.js"
   ]
 }
