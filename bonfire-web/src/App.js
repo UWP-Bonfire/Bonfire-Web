@@ -16,6 +16,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Welcome />} />
+        <Route path="/Bonfire-Web" element={<Welcome />} />
         <Route path="/friends" element={<Friends />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/login" element={<Login />} />
@@ -25,6 +26,8 @@ function App() {
         <Route path="/groupchats" element={<GroupChats />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/personalization" element={<Personalization />} />
+        {/* Catch-all route for unmatched paths */}
+        <Route path="*" element={<Welcome />} />
       </Routes>
     </Router>
   );
