@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import BonfireLogo from "../assets/images/bonfire.png";
 import { useNavigate } from "react-router-dom";
 import "../Styles/welcome.css";
 import "../Styles/global.css";
@@ -36,7 +35,7 @@ export default function Welcome() {
 
       <div className="welcome-content">
         <img
-          src={BonfireLogo}
+          src="/images/bonfire.png"
           alt="Bonfire Logo"
           className="welcome-logo"
         />

@@ -1,12 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import DefaultPFP from "../assets/images/3d_avatar_16.png";
-import ArrowIcon from "../assets/images/arrow.png";
-import BackIcon from "../assets/images/right-arrow.png";
-import GlobalIcon from "../assets/images/3d_avatar_1.png";
-import HappyMarsh from "../assets/images/Happy Marsh.png";
-import SadMarsh from "../assets/images/sad Marsh.png";
-import TiredMarsh from "../assets/images/tired marsh.png";
-import YaaayyyMarsh from "../assets/images/YAAAYYY MARSH.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import useChat from "./hooks/useChat";
@@ -16,10 +8,10 @@ import useImageUpload from "./hooks/useImageUpload.js";
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
 import { firestore } from "../firebase.js";
 
-const DEFAULT_PFP = DefaultPFP;
-const SEND_ICON = ArrowIcon;
-const BACK_ICON = BackIcon;
-const GLOBAL_ICON = GlobalIcon;
+const DEFAULT_PFP = "/images/Default PFP.jpg";
+const SEND_ICON = "/images/arrow.png";
+const BACK_ICON = "/images/right-arrow.png";
+const GLOBAL_ICON = "/images/icon11.png";
 
 const safeName = (obj) => obj?.name || obj?.username || obj?.displayName || "Anonymous";
 const safeAvatar = (obj) => obj?.avatar || obj?.profileImage || DEFAULT_PFP;
@@ -34,21 +26,12 @@ function handleUnreadSnapshot(friend, setUnreadCounts) {
 }
 
 /* =========================
-   Message Input (TEXT + IMAGE + EMOJI)
+   Message Input (TEXT + IMAGE)
 ========================= */
 const MessageInput = ({ onSendMessage, onSendImage }) => {
   const [newMessage, setNewMessage] = useState("");
-  const [showMarshPicker, setShowMarshPicker] = useState(false);
   const fileRef = useRef(null);
   const textareaRef = useRef(null);
-
-  // Marsh image data
-  const marshList = [
-    { id: "marsh1", src: HappyMarsh, label: "Happy Marsh" },
-    { id: "marsh2", src: SadMarsh, label: "Sad Marsh" },
-    { id: "marsh3", src: TiredMarsh, label: "Tired Marsh" },
-    { id: "marsh4", src: YaaayyyMarsh, label: "YAAAYYY Marsh" },
-  ];
 
   const autoGrow = () => {
     const el = textareaRef.current;
@@ -66,22 +49,22 @@ const MessageInput = ({ onSendMessage, onSendImage }) => {
 
     const text = typeof newMessage === "string" ? newMessage.trim() : "";
 
-    // send text if there is text
+    // ✅ If text exists → send text
     if (text) {
       onSendMessage(text);
       setNewMessage("");
       return;
     }
 
-    // if no text, open image picker
+    // ✅ If no text → open image picker
     fileRef.current?.click();
   };
 
-  // Enter = send, Shift+Enter = new line
+  // ✅ Enter = send, Shift+Enter = new line
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      handleSend(); // send text or open image picker
     }
   };
 
@@ -100,81 +83,37 @@ const MessageInput = ({ onSendMessage, onSendImage }) => {
       return;
     }
 
-    await onSendImage(file);
+    await onSendImage(file); // send image separately
     e.target.value = "";
   };
 
-  const handleMarshClick = async (marsh) => {
-    if (typeof onSendImage !== "function") {
-      console.error("onSendImage is not a function");
-      return;
-    }
-    // Fetch the image as a blob and send
-    try {
-      const response = await fetch(marsh.src);
-      const blob = await response.blob();
-      const file = new File([blob], marsh.label + ".png", { type: "image/png" });
-      await onSendImage(file);
-      setShowMarshPicker(false);
-    } catch (err) {
-      console.error("Failed to send marsh image", err);
-    }
-  };
-
   return (
-    <div className="message-input-wrapper">
-      {showMarshPicker && (
-        <div className="marsh-picker">
-          {marshList.map((marsh) => (
-            <button
-              key={marsh.id}
-              type="button"
-              className="marsh-option"
-              onClick={() => handleMarshClick(marsh)}
-              title={marsh.label}
-            >
-              <img src={marsh.src} alt={marsh.label} style={{ width: 32, height: 32 }} />
-            </button>
-          ))}
-        </div>
-      )}
+    <form className="chat-input" onSubmit={handleSend}>
+      <textarea
+        ref={textareaRef}
+        className="chat-textarea"
+        value={newMessage}
+        onChange={(e) => setNewMessage(e.target.value)}
+        onInput={autoGrow}
+        onKeyDown={handleKeyDown}
+        placeholder="Type a message..."
+        rows={1}
+      />
 
-      <form className="chat-input" onSubmit={handleSend}>
-        <button
-          type="button"
-          className="icon-btn marsh-btn"
-          onClick={() => setShowMarshPicker((prev) => !prev)}
-          aria-label="Open marsh images"
-        >
-          <img src={HappyMarsh} alt="Marsh" style={{ width: 24, height: 24 }} />
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+
+      <div className="icon-group">
+        <button className="icon-btn send-btn" type="submit">
+          <img src={SEND_ICON} alt="Send" />
         </button>
-
-        <textarea
-          ref={textareaRef}
-          className="chat-textarea"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onInput={autoGrow}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          rows={1}
-        />
-
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          style={{ display: "none" }}
-          onChange={handleFileChange}
-        />
-
-        <div className="icon-group">
-          <button className="icon-btn send-btn" type="submit">
-            <img src={SEND_ICON} alt="Send" />
-          </button>
-        </div>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 };
 
@@ -205,26 +144,22 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
 
       <div className="message-bubble">
         <span className="msg-name">{isSent ? (user.displayName || "You") : senderName}</span>
-
         {message.imageUrl && (
-          <img
-            src={message.imageUrl}
-            alt="Sent"
-            className="message-image"
-          />
-        )}
+  <img
+    src={message.imageUrl}
+    alt="Sent"
+    className="message-image"
+  />
+)}
 
-        {message.emoji && (
-          <div className="message-emoji">{message.emoji}</div>
-        )}
-
-        {message.text && (
-          <div className="message-text">{message.text}</div>
-        )}
+{message.text && (
+  <div className="message-text">{message.text}</div>
+)}
 
         <span className="msg-time">
           {formatTime(message.timestamp)}
 
+          {/* ✅ Read receipt: ✓ (sent) then ✓✓ (read) */}
           {!isGlobalChat && isSent && isLast && (
             <>
               {message.read ? (
@@ -265,7 +200,7 @@ export default function Messages() {
   useEffect(() => {
     if (!selectedFriend && location.state?.friendId && normalizedFriends.length > 0) {
       const friendId = location.state.friendId;
-      const found = normalizedFriends.find((f) => f.id === friendId);
+      const found = normalizedFriends.find(f => f.id === friendId);
       if (found) setSelectedFriend(found);
     }
   }, [normalizedFriends, selectedFriend, location.state]);
@@ -285,103 +220,72 @@ export default function Messages() {
       return onSnapshot(q, handleUnreadSnapshot(friend, setUnreadCounts));
     });
 
-    return () => unsubscribes.forEach((u) => u());
-  }, [normalizedFriends, user]);
+  return () => unsubscribes.forEach((u) => u());
+}, [normalizedFriends, user]);
 
-  const handleBack = () => navigate("/friends");
+const handleBack = () => navigate("/friends");
 
-  function markUnreadMessages(messages, user, markMessageAsRead) {
-    if (!messages?.length) return;
-    messages.forEach((m) => {
-      if (m.senderId !== user.uid && !m.read) {
-        const idToMark = m.id || m.docId || m.messageId;
-        if (idToMark) markMessageAsRead(idToMark);
-      }
-    });
-  }
+function markUnreadMessages(messages, user, markMessageAsRead) {
+  if (!messages?.length) return;
+  messages.forEach((m) => {
+    if (m.senderId !== user.uid && !m.read) {
+      const idToMark = m.id || m.docId || m.messageId;
+      if (idToMark) markMessageAsRead(idToMark);
+    }
+  });
+}
 
   const ChatView = ({ friend }) => {
     const isGlobalChat = friend.id === "global";
 
-    const {
-      messages,
-      loading: messagesLoading,
-      sendMessage,
-      sendImage,
-      userProfiles,
-      markMessageAsRead,
-    } = useChat(friend.id);
 
-    const { uploadImage, isUploading, error } = useImageUpload();
+    const { messages, loading: messagesLoading, sendMessage, sendImage, userProfiles, markMessageAsRead } =
+  useChat(friend.id);
 
-    const getChatId = (uid1, uid2) => [uid1, uid2].sort((a, b) => a.localeCompare(b)).join("_");
+  const { uploadImage, isUploading, error } = useImageUpload();
 
-    const sendImageOnly = async (file) => {
-      if (!file || !user || !friend?.id) return;
-      if (!file.type?.startsWith("image/")) return;
+const getChatId = (uid1, uid2) => [uid1, uid2].sort((a, b) => a.localeCompare(b)).join("_");
 
-      console.log("Picked file:", file.name, file.type);
+const sendImageOnly = async (file) => {
+  if (!file || !user || !friend?.id) return;
+  if (!file.type?.startsWith("image/")) return;
 
-      const isGlobalChat = friend.id === "global";
-      const messagesPath = isGlobalChat
-        ? "messages"
-        : `chats/${getChatId(user.uid, friend.id)}/messages`;
+  console.log("Picked file:", file.name, file.type);
 
-      try {
-        const imageUrl = await uploadImage(file);
-        console.log("Uploaded URL:", imageUrl);
-        if (!imageUrl) return;
+  const isGlobalChat = friend.id === "global";
+  const messagesPath = isGlobalChat
+    ? "messages"
+    : `chats/${getChatId(user.uid, friend.id)}/messages`;
 
-        const messagesRef = collection(firestore, messagesPath);
+  try {
+    const imageUrl = await uploadImage(file);
+    console.log("Uploaded URL:", imageUrl);
+    if (!imageUrl) return;
 
-        await addDoc(messagesRef, {
-          text: "",
-          imageUrl,
-          timestamp: serverTimestamp(),
-          senderId: user.uid,
-          displayName: userProfile?.name || user?.displayName || "Anonymous",
-          photoURL: userProfile?.avatar || user?.photoURL || DEFAULT_PFP,
-          read: false,
-        });
-      } catch (err) {
-        console.error("Error sending image:", err);
-      }
-    };
+    const messagesRef = collection(firestore, messagesPath);
 
-    const sendEmojiOnly = async (emoji) => {
-      if (!emoji || !user || !friend?.id) return;
-
-      const isGlobalChat = friend.id === "global";
-      const messagesPath = isGlobalChat
-        ? "messages"
-        : `chats/${getChatId(user.uid, friend.id)}/messages`;
-
-      try {
-        const messagesRef = collection(firestore, messagesPath);
-
-        await addDoc(messagesRef, {
-          text: "",
-          emoji: emoji.symbol,
-          emojiId: emoji.id,
-          timestamp: serverTimestamp(),
-          senderId: user.uid,
-          displayName: userProfile?.name || user?.displayName || "Anonymous",
-          photoURL: userProfile?.avatar || user?.photoURL || DEFAULT_PFP,
-          read: false,
-        });
-      } catch (err) {
-        console.error("Error sending emoji:", err);
-      }
-    };
+    await addDoc(messagesRef, {
+      text: "",
+      imageUrl,
+      timestamp: serverTimestamp(),
+      senderId: user.uid,
+      displayName: userProfile?.name || user?.displayName || "Anonymous",
+      photoURL: userProfile?.avatar || user?.photoURL || DEFAULT_PFP,
+      read: false,
+    });
+  } catch (err) {
+    console.error("Error sending image:", err);
+  }
+};
 
     const messagesEndRef = useRef(null);
 
-    useEffect(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-      markUnreadMessages(messages, user, markMessageAsRead);
-    }, [messages, user?.uid, markMessageAsRead]);
+useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  markUnreadMessages(messages, user, markMessageAsRead);
+}, [messages, user?.uid, markMessageAsRead]);
 
-    return (
+return (
       <>
         <div className="chat-header" style={{ justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -418,15 +322,13 @@ export default function Messages() {
           <div ref={messagesEndRef} />
         </div>
 
-        {error && <div style={{ color: "brown", padding: "6px 0" }}>{error}</div>}
-        {isUploading && <div style={{ padding: "6px 0" }}>Uploading image...</div>}
+            {error && <div style={{ color: "brown", padding: "6px 0" }}>{error}</div>}
+{isUploading && <div style={{ padding: "6px 0" }}>Uploading image...</div>}
 
         <div className="input-box">
-          <MessageInput
-            onSendMessage={sendMessage}
-            onSendImage={sendImageOnly}
-            onSendEmoji={sendEmojiOnly}
-          />
+          <MessageInput onSendMessage={sendMessage} onSendImage={sendImageOnly} />
+
+          
         </div>
       </>
     );

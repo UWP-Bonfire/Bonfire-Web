@@ -13,11 +13,8 @@ import { signOut } from "firebase/auth";
 import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
 
 import "../Styles/friends.css";
-import BellIcon from "../assets/icons/Bell.png";
-import SettingsIcon from "../assets/icons/Settings.svg";
-import DefaultAvatar from "../assets/images/3d_avatar_16.png";
 
-const DEFAULT_AVATAR = DefaultAvatar;
+const DEFAULT_AVATAR = "/images/default-avatar.png";
 
 export default function Friends() {
   const navigate = useNavigate();
@@ -181,7 +178,7 @@ export default function Friends() {
             onClick={() => navigate("/settings")}
             aria-label="Settings"
           >
-            <img src={SettingsIcon} alt="Settings" />
+            <img src="/icons/Settings.svg" alt="Settings" />
           </button>
 
           <div className="user" onClick={() => navigate("/account")}> 
@@ -204,7 +201,7 @@ export default function Friends() {
             {/* Bell notifications kept */}
             <div className="notif-container">
               <button className="notif-btn" onClick={() => setShowNotifications((s) => !s)}>
-                <img src={BellIcon} alt="Notifications" />
+                <img src="/icons/Bell.png" alt="Notifications" />
                 {friendRequests.length > 0 && <span className="notif-dot"></span>}
               </button>
 
