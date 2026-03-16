@@ -603,6 +603,14 @@ export default function Messages() {
                 className={`dm ${selectedFriend?.id === friend.id ? "active" : ""}`}
                 key={friend.id}
                 onClick={() => setSelectedFriend(friend)}
+                tabIndex={0}
+                role="button"
+                aria-label={`Open chat with ${friend.name}`}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setSelectedFriend(friend);
+                  }
+                }}
               >
                 <img
                   src={friend.avatar}
