@@ -13,7 +13,14 @@ import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
 import "../Styles/messages.css";
 import useImageUpload from "./hooks/useImageUpload.js";
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { firestore } from "../firebase.js";
 
 const DEFAULT_PFP = DefaultPFP;
@@ -34,15 +41,20 @@ function handleUnreadSnapshot(friend, setUnreadCounts) {
 }
 
 /* =========================
-   Message Input (TEXT + IMAGE + EMOJI)
+   Message Input (TEXT + IMAGE + VOICE)
 ========================= */
-const MessageInput = ({ onSendMessage, onSendImage }) => {
+const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
   const [newMessage, setNewMessage] = useState("");
   const [showMarshPicker, setShowMarshPicker] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [recordingNotification, setRecordingNotification] = useState("");
+  const { uploadImage } = useImageUpload();
   const fileRef = useRef(null);
   const textareaRef = useRef(null);
+  const audioStreamRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
-  // Marsh image data
   const marshList = [
     { id: "marsh1", src: HappyMarsh, label: "Happy Marsh" },
     { id: "marsh2", src: SadMarsh, label: "Sad Marsh" },
@@ -66,18 +78,15 @@ const MessageInput = ({ onSendMessage, onSendImage }) => {
 
     const text = typeof newMessage === "string" ? newMessage.trim() : "";
 
-    // send text if there is text
     if (text) {
       onSendMessage(text);
       setNewMessage("");
       return;
     }
 
-    // if no text, open image picker
     fileRef.current?.click();
   };
 
-  // Enter = send, Shift+Enter = new line
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -109,11 +118,11 @@ const MessageInput = ({ onSendMessage, onSendImage }) => {
       console.error("onSendImage is not a function");
       return;
     }
-    // Fetch the image as a blob and send
+
     try {
       const response = await fetch(marsh.src);
       const blob = await response.blob();
-      const file = new File([blob], marsh.label + ".png", { type: "image/png" });
+      const file = new File([blob], `${marsh.label}.png`, { type: "image/png" });
       await onSendImage(file);
       setShowMarshPicker(false);
     } catch (err) {
@@ -121,8 +130,21 @@ const MessageInput = ({ onSendMessage, onSendImage }) => {
     }
   };
 
+  const stopTracks = () => {
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+    }
+  };
+
   return (
     <div className="message-input-wrapper">
+      {recordingNotification && (
+        <div style={{ color: "#ff5252", marginBottom: 8, fontWeight: 600 }}>
+          {recordingNotification}
+        </div>
+      )}
+
       {showMarshPicker && (
         <div className="marsh-picker">
           {marshList.map((marsh) => (
@@ -139,7 +161,7 @@ const MessageInput = ({ onSendMessage, onSendImage }) => {
         </div>
       )}
 
-      <form className="chat-input" onSubmit={handleSend}>
+      <form className="chat-input" onSubmit={handleSend} style={{ display: "flex", alignItems: "center" }}>
         <button
           type="button"
           className="icon-btn marsh-btn"
@@ -168,9 +190,111 @@ const MessageInput = ({ onSendMessage, onSendImage }) => {
           onChange={handleFileChange}
         />
 
-        <div className="icon-group">
+        <div className="icon-group" style={{ display: "flex", alignItems: "center" }}>
           <button className="icon-btn send-btn" type="submit">
             <img src={SEND_ICON} alt="Send" />
+          </button>
+
+          <button
+            type="button"
+            className="voice-btn"
+            style={{
+              marginLeft: "8px",
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              background: isRecording ? "#ff5252" : "#eee",
+              border: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: isRecording ? "0 0 8px #ff5252" : "0 0 4px #aaa",
+              cursor: "pointer",
+            }}
+            aria-label="Record voice message"
+            onClick={async () => {
+              if (!isRecording) {
+                try {
+                  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                  audioStreamRef.current = stream;
+
+                  const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+                    ? "audio/webm;codecs=opus"
+                    : "audio/webm";
+
+                  const recorder = new window.MediaRecorder(stream, { mimeType });
+                  audioChunksRef.current = [];
+                  setMediaRecorder(recorder);
+
+                  recorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) {
+                      audioChunksRef.current.push(e.data);
+                    }
+                  };
+
+                  recorder.onstart = () => {
+                    setRecordingNotification("Recording voice message...");
+                    setIsRecording(true);
+                  };
+
+                  recorder.onstop = async () => {
+                    setRecordingNotification("");
+                    setIsRecording(false);
+
+                    if (audioChunksRef.current.length === 0) {
+                      audioChunksRef.current = [];
+                      stopTracks();
+                      return;
+                    }
+
+                    const shouldSend = window.confirm("Send this voice message?");
+                    if (!shouldSend) {
+                      audioChunksRef.current = [];
+                      stopTracks();
+                      return;
+                    }
+
+                    try {
+                      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+                      const audioFile = new File([audioBlob], "voice-message.webm", {
+                        type: "audio/webm",
+                      });
+
+                      const audioUrl = await uploadImage(audioFile);
+
+                      if (audioUrl && typeof onSendVoice === "function") {
+                        await onSendVoice({
+                          audioUrl,
+                          audioName: "voice-message.webm",
+                          audioType: "audio/webm",
+                        });
+                      } else {
+                        alert("Failed to upload voice message.");
+                      }
+                    } catch (err) {
+                      console.error("Error uploading voice message:", err);
+                      alert("Error uploading voice message.");
+                    } finally {
+                      audioChunksRef.current = [];
+                      stopTracks();
+                    }
+                  };
+
+                  recorder.start();
+                } catch (err) {
+                  console.error(err);
+                  setRecordingNotification("Microphone access denied or unavailable.");
+                }
+              } else {
+                if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                  mediaRecorder.stop();
+                }
+              }
+            }}
+          >
+            <span style={{ fontSize: "22px", color: isRecording ? "white" : "#333" }}>
+              🎤
+            </span>
           </button>
         </div>
       </form>
@@ -203,8 +327,8 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
         onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
       />
 
-      <div className="message-bubble">
-        <span className="msg-name">{isSent ? (user.displayName || "You") : senderName}</span>
+      <div className={`message-bubble ${message.audioUrl ? "audio-message-bubble" : ""}`}>
+        <span className="msg-name">{isSent ? user.displayName || "You" : senderName}</span>
 
         {message.imageUrl && (
           <img
@@ -213,6 +337,17 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
             className="message-image"
           />
         )}
+
+          {message.audioUrl && (
+            <div className="message-audio big-audio-bubble">
+              <audio
+                controls
+                preload="metadata"
+                className="voice-player"
+                src={message.audioUrl}
+              />
+            </div>
+          )}
 
         {message.emoji && (
           <div className="message-emoji">{message.emoji}</div>
@@ -261,7 +396,6 @@ export default function Messages() {
     [friends]
   );
 
-  // Auto-select friend if navigated with state.friendId
   useEffect(() => {
     if (!selectedFriend && location.state?.friendId && normalizedFriends.length > 0) {
       const friendId = location.state.friendId;
@@ -275,6 +409,7 @@ export default function Messages() {
 
     const unsubscribes = normalizedFriends.map((friend) => {
       if (friend.isMuted) return () => {};
+
       const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
       const messagesRef = collection(firestore, "chats", chatId, "messages");
       const q = query(
@@ -282,6 +417,7 @@ export default function Messages() {
         where("read", "==", false),
         where("senderId", "==", friend.id)
       );
+
       return onSnapshot(q, handleUnreadSnapshot(friend, setUnreadCounts));
     });
 
@@ -292,6 +428,7 @@ export default function Messages() {
 
   function markUnreadMessages(messages, user, markMessageAsRead) {
     if (!messages?.length) return;
+
     messages.forEach((m) => {
       if (m.senderId !== user.uid && !m.read) {
         const idToMark = m.id || m.docId || m.messageId;
@@ -307,7 +444,6 @@ export default function Messages() {
       messages,
       loading: messagesLoading,
       sendMessage,
-      sendImage,
       userProfiles,
       markMessageAsRead,
     } = useChat(friend.id);
@@ -320,16 +456,12 @@ export default function Messages() {
       if (!file || !user || !friend?.id) return;
       if (!file.type?.startsWith("image/")) return;
 
-      console.log("Picked file:", file.name, file.type);
-
-      const isGlobalChat = friend.id === "global";
       const messagesPath = isGlobalChat
         ? "messages"
         : `chats/${getChatId(user.uid, friend.id)}/messages`;
 
       try {
         const imageUrl = await uploadImage(file);
-        console.log("Uploaded URL:", imageUrl);
         if (!imageUrl) return;
 
         const messagesRef = collection(firestore, messagesPath);
@@ -348,10 +480,35 @@ export default function Messages() {
       }
     };
 
+    const sendVoiceOnly = async ({ audioUrl, audioName, audioType }) => {
+      if (!audioUrl || !user || !friend?.id) return;
+
+      const messagesPath = isGlobalChat
+        ? "messages"
+        : `chats/${getChatId(user.uid, friend.id)}/messages`;
+
+      try {
+        const messagesRef = collection(firestore, messagesPath);
+
+        await addDoc(messagesRef, {
+          text: "",
+          audioUrl,
+          audioName: audioName || "voice-message.webm",
+          audioType: audioType || "audio/webm",
+          timestamp: serverTimestamp(),
+          senderId: user.uid,
+          displayName: userProfile?.name || user?.displayName || "Anonymous",
+          photoURL: userProfile?.avatar || user?.photoURL || DEFAULT_PFP,
+          read: false,
+        });
+      } catch (err) {
+        console.error("Error sending voice message:", err);
+      }
+    };
+
     const sendEmojiOnly = async (emoji) => {
       if (!emoji || !user || !friend?.id) return;
 
-      const isGlobalChat = friend.id === "global";
       const messagesPath = isGlobalChat
         ? "messages"
         : `chats/${getChatId(user.uid, friend.id)}/messages`;
@@ -425,7 +582,7 @@ export default function Messages() {
           <MessageInput
             onSendMessage={sendMessage}
             onSendImage={sendImageOnly}
-            onSendEmoji={sendEmojiOnly}
+            onSendVoice={sendVoiceOnly}
           />
         </div>
       </>
