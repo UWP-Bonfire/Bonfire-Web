@@ -48,7 +48,7 @@ export default function Friends() {
     requestPermission();
   }, [requestPermission]);
 
-  // ✅ Track per-friend "Limit Notifications" flag from chat doc
+  // Track per-friend "Limit Notifications" flag from chat doc
   useEffect(() => {
     if (!user || friends.length === 0) return;
 
@@ -100,13 +100,14 @@ export default function Friends() {
   };
 
   const handleBlockToggle = (friendId) => {
-    if (blockedUsers.includes(friendId)) {
-      unblockUser(friendId);
-    } else {
-      blockUser(friendId);
-    }
-    setActiveOptionsMenu(null);
-  };
+  const isBlocked = blockedUsers.some(user => user.id === friendId);
+  if (isBlocked) {
+    unblockUser(friendId);
+  } else {
+    blockUser(friendId);
+  }
+  setActiveOptionsMenu(null);
+};
 
   const handleMuteToggle = (friend) => {
     if (friend.isMuted) {
@@ -141,15 +142,15 @@ export default function Friends() {
   if (loading) return <div>Loading friends...</div>;
   if (error) return <div>{error}</div>;
 
-  // ✅ hide blocked users
+  // hide blocked users
   const visibleFriends = friends
-    .filter((f) => !blockedUsers.includes(f.id))
-    .sort((a, b) => {
-      // Sort by unread message count (descending)
-      const unreadA = unreadCounts[a.id] || 0;
-      const unreadB = unreadCounts[b.id] || 0;
-      return unreadB - unreadA;
-    });
+  .filter((f) => !blockedUsers.some(user => user.id === f.id))
+  .sort((a, b) => {
+    // Sort by unread message count (descending)
+    const unreadA = unreadCounts[a.id] || 0;
+    const unreadB = unreadCounts[b.id] || 0;
+    return unreadB - unreadA;
+  });
 
   return (
     <div className="container">
