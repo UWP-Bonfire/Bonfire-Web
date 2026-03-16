@@ -19,7 +19,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "predeploy": "npm run build",
-    "deploy": "cd .. && gh-pages -d bonfire-web/build -r https://github.com/UWP-Bonfire/Bonfire-Web.git",
+    "deploy": "gh-pages -d build --repo https://github.com/UWP-Bonfire/Bonfire-Web.git",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
