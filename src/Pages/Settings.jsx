@@ -15,14 +15,14 @@ const BlockedUsers = () => {
       <h2>Blocked Users</h2>
 
       <div className="friends-container">
-        {blockedUsers.map((userId) => (
-          <div className="friend-card" key={userId}>
+        {blockedUsers.map((user) => (
+          <div className="friend-card" key={user.id}>
             <div className="friend-info">
-              <span className="friend-name">{userId}</span>
+              <span className="friend-name">{user.name}</span>
             </div>
 
             <div className="friend-actions">
-              <button type="button" onClick={() => unblockUser(userId)}>
+              <button type="button" onClick={() => unblockUser(user.id)}>
                 Unblock
               </button>
             </div>

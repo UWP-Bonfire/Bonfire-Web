@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
+import useBlockUser from './useBlockUser';
 import { firestore } from '../../firebase';
 import {
     collection,
@@ -16,6 +17,7 @@ import {
 
 const useChat = (friendId) => {
     const { user, userProfile } = useAuth();
+    const { blockedUsers } = useBlockUser();
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [userProfiles, setUserProfiles] = useState({});
@@ -35,19 +37,28 @@ const useChat = (friendId) => {
 
         const newUserProfiles = {};
         const chunks = [];
+
         for (let i = 0; i < uidsToFetch.length; i += 30) {
             chunks.push(uidsToFetch.slice(i, i + 30));
         }
 
         for (const chunk of chunks) {
-            const usersQuery = query(collection(firestore, 'users'), where('__name__', 'in', chunk));
+            const usersQuery = query(
+                collection(firestore, 'users'),
+                where('__name__', 'in', chunk)
+            );
+
             const usersSnapshot = await getDocs(usersQuery);
+
             usersSnapshot.forEach(doc => {
                 newUserProfiles[doc.id] = doc.data();
             });
         }
 
-        setUserProfiles(prevProfiles => ({ ...prevProfiles, ...newUserProfiles }));
+        setUserProfiles(prevProfiles => ({
+            ...prevProfiles,
+            ...newUserProfiles
+        }));
     }, []);
 
     useEffect(() => {
@@ -60,36 +71,62 @@ const useChat = (friendId) => {
         setMessages([]);
         setLoading(true);
 
+        const blockedIds = blockedUsers.map(u => u.id);
+
         const isGlobalChat = friendId === 'global';
-        const messagesPath = isGlobalChat ? 'messages' : `chats/${getChatId(user.uid, friendId)}/messages`;
+        const messagesPath = isGlobalChat
+            ? 'messages'
+            : `chats/${getChatId(user.uid, friendId)}/messages`;
 
         const messagesRef = collection(firestore, messagesPath);
         const q = query(messagesRef, orderBy("timestamp"));
 
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const allMessages = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setMessages(allMessages);
+        const unsubscribe = onSnapshot(
+            q,
+            (querySnapshot) => {
+                const allMessages = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
 
-            const uids = [...new Set(allMessages.map(msg => msg.senderId).filter(Boolean))];
-            if (uids.length > 0) {
-                fetchUserProfiles(uids);
+                // Filter blocked users
+                const filteredMessages = allMessages.filter(
+                    msg => !blockedIds.includes(msg.senderId)
+                );
+
+                setMessages(filteredMessages);
+
+                const uids = [
+                    ...new Set(
+                        filteredMessages
+                            .map(msg => msg.senderId)
+                            .filter(Boolean)
+                    )
+                ];
+
+                if (uids.length > 0) {
+                    fetchUserProfiles(uids);
+                }
+
+                setLoading(false);
+            },
+            (err) => {
+                console.error("Error fetching messages: ", err);
+                setLoading(false);
             }
-
-            setLoading(false);
-        }, (err) => {
-            console.error("Error fetching messages: ", err);
-            setLoading(false);
-        });
+        );
 
         return () => unsubscribe();
-    }, [user, friendId, fetchUserProfiles]);
+    }, [user, friendId, blockedUsers, fetchUserProfiles]);
 
     const sendMessage = useCallback(async (text) => {
         if (text.trim() === "" || !user || !userProfile || !friendId) return;
 
         const isGlobalChat = friendId === 'global';
-        const messagesPath = isGlobalChat ? 'messages' : `chats/${getChatId(user.uid, friendId)}/messages`;
-        
+        const messagesPath = isGlobalChat
+            ? 'messages'
+            : `chats/${getChatId(user.uid, friendId)}/messages`;
+
         const messagesRef = collection(firestore, messagesPath);
 
         try {
@@ -108,7 +145,7 @@ const useChat = (friendId) => {
 
     const markMessageAsRead = useCallback(async (messageId) => {
         if (!user || !friendId || friendId === 'global') return;
-        
+
         const chatId = getChatId(user.uid, friendId);
         const messagesPath = `chats/${chatId}/messages`;
         const messageRef = doc(firestore, messagesPath, messageId);
@@ -122,7 +159,13 @@ const useChat = (friendId) => {
         }
     }, [user, friendId]);
 
-    return { messages, loading, sendMessage, userProfiles, markMessageAsRead };
+    return {
+        messages,
+        loading,
+        sendMessage,
+        userProfiles,
+        markMessageAsRead
+    };
 };
 
 export default useChat;
