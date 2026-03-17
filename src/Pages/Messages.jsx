@@ -7,6 +7,10 @@ import HappyMarsh from "../assets/images/Happy Marsh.png";
 import SadMarsh from "../assets/images/sad Marsh.png";
 import TiredMarsh from "../assets/images/tired marsh.png";
 import YaaayyyMarsh from "../assets/images/YAAAYYY MARSH.png";
+import BonfireEmoji from "../assets/images/bonfire.png";
+import BonfireRainEmoji from "../assets/images/bonfire_rain.png";
+import BonfirePoutEmoji from "../assets/images/bonfire_pout.png";
+import BonfireNomEmoji from "../assets/images/bonfire_nom.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import useBlockUser from "./hooks/useBlockUser";
@@ -61,6 +65,10 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
     { id: "marsh2", src: SadMarsh, label: "Sad Marsh" },
     { id: "marsh3", src: TiredMarsh, label: "Tired Marsh" },
     { id: "marsh4", src: YaaayyyMarsh, label: "YAAAYYY Marsh" },
+    { id: "bonfire1", src: BonfireEmoji, label: "Bonfire" },
+    { id: "bonfire2", src: BonfireRainEmoji, label: "Bonfire Rain" },
+    { id: "bonfire3", src: BonfirePoutEmoji, label: "Bonfire Pout" },
+    { id: "bonfire4", src: BonfireNomEmoji, label: "Bonfire Nom" },
   ];
 
   const autoGrow = () => {
