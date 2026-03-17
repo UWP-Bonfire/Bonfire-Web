@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { firestore } from '../../firebase';
-import { doc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, arrayRemove, onSnapshot, collection, query, where, documentId, getDocs } from 'firebase/firestore';
 import { useAuth } from './useAuth';
 
 const useBlockUser = () => {
@@ -11,9 +11,22 @@ const useBlockUser = () => {
     useEffect(() => {
         if (user) {
             const userRef = doc(firestore, 'users', user.uid);
-            const unsubscribe = onSnapshot(userRef, (doc) => {
+            const unsubscribe = onSnapshot(userRef, async (doc) => {
                 if (doc.exists() && doc.data().blockedUsers) {
-                    setBlockedUsers(doc.data().blockedUsers);
+                    const blockedIds = doc.data().blockedUsers;
+                    if (blockedIds && blockedIds.length > 0) {
+                        const blockedQuery = query(collection(firestore, 'users'), where(documentId(), 'in', blockedIds));
+                        try {
+                            const querySnapshot = await getDocs(blockedQuery);
+                            const blockedData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            setBlockedUsers(blockedData);
+                        } catch (err) {
+                            console.error("Error fetching blocked users data: ", err);
+                            setBlockedUsers([]);
+                        }
+                    } else {
+                        setBlockedUsers([]);
+                    }
                 } else {
                     setBlockedUsers([]);
                 }

@@ -9,6 +9,7 @@ import TiredMarsh from "../assets/images/tired marsh.png";
 import YaaayyyMarsh from "../assets/images/YAAAYYY MARSH.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
+import useBlockUser from "./hooks/useBlockUser";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
 import "../Styles/messages.css";
@@ -379,21 +380,26 @@ export default function Messages() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userProfile } = useAuth();
+  const { blockedUsers } = useBlockUser();
   const { friends, loading: friendsLoading } = useFriends();
 
   const myAvatar = userProfile?.avatar || user?.photoURL || DEFAULT_PFP;
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
 
+  const blockedIds = useMemo(() => new Set((blockedUsers || []).map((u) => u.id)), [blockedUsers]);
+
   const normalizedFriends = useMemo(
     () =>
-      (friends || []).map((f) => ({
-        ...f,
-        id: f.id || f.uid,
-        name: safeName(f),
-        avatar: safeAvatar(f),
-      })),
-    [friends]
+      (friends || [])
+        .map((f) => ({
+          ...f,
+          id: f.id || f.uid,
+          name: safeName(f),
+          avatar: safeAvatar(f),
+        }))
+        .filter((f) => !blockedIds.has(f.id)),
+    [friends, blockedIds]
   );
 
   useEffect(() => {
@@ -403,6 +409,13 @@ export default function Messages() {
       if (found) setSelectedFriend(found);
     }
   }, [normalizedFriends, selectedFriend, location.state]);
+
+  // Clear the selected friend if they become blocked
+  useEffect(() => {
+    if (selectedFriend && blockedIds.has(selectedFriend.id)) {
+      setSelectedFriend(null);
+    }
+  }, [selectedFriend, blockedIds]);
 
   useEffect(() => {
     if (!user || normalizedFriends.length === 0) return;
