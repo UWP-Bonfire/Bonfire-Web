@@ -466,3 +466,43 @@
     padding: 8px 0;
   }
 }
+
+.message-audio {
+  overflow: visible;
+}
+
+.big-audio-bubble {
+  margin-top: 8px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  min-width: 280px;
+  max-width: 420px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.voice-player {
+  display: block;
+  width: 100%;
+  min-width: 260px;
+  height: 54px;
+}
+
+
+.message-row.sent .big-audio-bubble {
+  background: #f0a37a;
+}
+
+.message-row.received .big-audio-bubble {
+  background: #5c4b66;
+}
+
+.message-bubble {
+  max-width: 500px;
+  width: fit-content;
+}
+
+.audio-message-bubble {
+  max-width: 480px;
+  width: 100%;
+}
