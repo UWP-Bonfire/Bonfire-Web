@@ -60,7 +60,7 @@ export default function Friends() {
     }
 
     function subscribeLimitNotifications(friend) {
-      const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
+      const chatId = [user.uid, friend.id].sort().join("_");
       const chatRef = doc(firestore, "chats", chatId);
       return onSnapshot(chatRef, (snap) => setLimitNotifications(friend, snap));
     }
@@ -81,7 +81,7 @@ export default function Friends() {
     }
 
     function subscribeUnreadCount(friend) {
-      const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
+      const chatId = [user.uid, friend.id].sort().join("_");
       const messagesRef = collection(firestore, "chats", chatId, "messages");
       const q = query(
         messagesRef,

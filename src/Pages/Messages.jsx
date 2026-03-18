@@ -431,7 +431,7 @@ export default function Messages() {
     const unsubscribes = normalizedFriends.map((friend) => {
       if (friend.isMuted) return () => {};
 
-      const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
+      const chatId = [user.uid, friend.id].sort().join("_");
       const messagesRef = collection(firestore, "chats", chatId, "messages");
       const q = query(
         messagesRef,
@@ -471,7 +471,7 @@ export default function Messages() {
 
     const { uploadImage, isUploading, error } = useImageUpload();
 
-    const getChatId = (uid1, uid2) => [uid1, uid2].sort((a, b) => a.localeCompare(b)).join("_");
+    const chatId = [user.uid, friend.id].sort().join("_");
 
     const sendImageOnly = async (file) => {
       if (!file || !user || !friend?.id) return;
