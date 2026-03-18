@@ -28,7 +28,7 @@ const useChat = (friendId) => {
     }, [userProfiles]);
 
     const getChatId = (uid1, uid2) => {
-        return [uid1, uid2].sort((a, b) => a.localeCompare(b)).join('_');
+        return [uid1, uid2].sort().join('_');
     };
 
     const fetchUserProfiles = useCallback(async (uids) => {
