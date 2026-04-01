@@ -7,11 +7,14 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [birthDay, setBirthDay] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const { signUp, error, loading, verificationSent } = useAuthentication();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-    await signUp(email, password, username);
+    await signUp(email, password, username, birthDay, birthMonth, birthYear);
   };
 
   return (
@@ -45,6 +48,42 @@ export default function SignUp() {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <label htmlFor="birthDay">Birth Day</label>
+          <input
+            type="number"
+            id="birthDay"
+            placeholder="DD (1-31)"
+            min="1"
+            max="31"
+            value={birthDay}
+            onChange={(e) => setBirthDay(e.target.value)}
+            required
+          />
+
+          <label htmlFor="birthMonth">Birth Month</label>
+          <input
+            type="number"
+            id="birthMonth"
+            placeholder="MM (1-12)"
+            min="1"
+            max="12"
+            value={birthMonth}
+            onChange={(e) => setBirthMonth(e.target.value)}
+            required
+          />
+
+          <label htmlFor="birthYear">Birth Year</label>
+          <input
+            type="number"
+            id="birthYear"
+            placeholder="YYYY"
+            min="1900"
+            max={new Date().getFullYear()}
+            value={birthYear}
+            onChange={(e) => setBirthYear(e.target.value)}
             required
           />
 
