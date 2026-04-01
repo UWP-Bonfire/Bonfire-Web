@@ -7,7 +7,8 @@ import {
     sendEmailVerification,
     signOut
 } from "firebase/auth";
-import { doc, setDoc, getDoc, serverTimestamp, getDocs, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, getDocs, collection, query, where, onSnapshot, updateDoc } from 'firebase/firestore';
+import { validateBirthDate, isOver18, createBirthDateString, calculateAge } from './ageVerification';
 
 const useAuth = () => {
     const [user, setUser] = useState(null);
@@ -36,7 +37,24 @@ const useAuth = () => {
             const userRef = doc(firestore, 'users', user.uid);
             const unsubscribeProfile = onSnapshot(userRef, (docSnap) => {
                 if (docSnap.exists()) {
-                    setUserProfile(docSnap.data());
+                    let userData = docSnap.data();
+                    
+                    // Check and update age flag if birthDate exists
+                    if (userData.birthDate) {
+                        const birthDate = new Date(userData.birthDate);
+                        const birthDay = birthDate.getDate();
+                        const birthMonth = birthDate.getMonth() + 1;
+                        const birthYear = birthDate.getFullYear();
+                        const currentIsOver18 = isOver18(birthDay, birthMonth, birthYear);
+                        
+                        // If age flag status has changed, update it
+                        if (userData.isOver18 !== currentIsOver18) {
+                            updateDoc(userRef, { isOver18: currentIsOver18 });
+                            userData = { ...userData, isOver18: currentIsOver18 };
+                        }
+                    }
+                    
+                    setUserProfile(userData);
                 } else {
                     const newProfile = {
                         email: user.email,
@@ -90,11 +108,19 @@ const useAuthentication = () => {
         }
     };
 
-    const signUp = async (email, password, username) => {
+    const signUp = async (email, password, username, birthDay, birthMonth, birthYear) => {
         setLoading(true);
         setError('');
         setVerificationSent(false);
         try {
+            // Validate birth date
+            const birthDateValidation = validateBirthDate(birthDay, birthMonth, birthYear);
+            if (!birthDateValidation.isValid) {
+                setError(birthDateValidation.error);
+                setLoading(false);
+                return;
+            }
+
             const usersCollectionRef = collection(firestore, 'users');
             const usernameQuery = query(usersCollectionRef, where("name", "==", username));
             const usernameQuerySnapshot = await getDocs(usernameQuery);
@@ -109,6 +135,30 @@ const useAuthentication = () => {
             if (userCredential && userCredential.user) {
                 const user = userCredential.user;
                 await updateProfile(user, { displayName: username });
+                
+                // Calculate age and get isOver18 flag
+                const over18 = isOver18(parseInt(birthDay, 10), parseInt(birthMonth, 10), parseInt(birthYear, 10));
+                const birthDateString = createBirthDateString(parseInt(birthDay, 10), parseInt(birthMonth, 10), parseInt(birthYear, 10));
+                
+                // Store age verification data in user document
+                const userRef = doc(firestore, 'users', user.uid);
+                const initialProfile = {
+                    email: user.email,
+                    createdAt: serverTimestamp(),
+                    displayName: username,
+                    name: username,
+                    birthDate: birthDateString,
+                    birthDay: parseInt(birthDay, 10),
+                    birthMonth: parseInt(birthMonth, 10),
+                    birthYear: parseInt(birthYear, 10),
+                    isOver18: over18,
+                    avatar: 'https://firebasestorage.googleapis.com/v0/b/bonfire-d8db1.firebasestorage.app/o/Profile_Pictures%2Flogo.png?alt=media&token=15ac7dfc-d970-49f2-a9c6-429dd0656f0a',
+                    bio: 'Welcome to Bonfire!',
+                    bgColor: '#ffd9ba',
+                    usernameColor: '#c84848'
+                };
+                await setDoc(userRef, initialProfile);
+                
                 await sendEmailVerification(user);
                 await signOut(auth);
 
