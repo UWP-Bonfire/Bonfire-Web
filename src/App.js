@@ -16,7 +16,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Welcome />} />
-        <Route path="/Bonfire-Web" element={<Welcome />} />
         <Route path="/friends" element={<Friends />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/login" element={<Login />} />
