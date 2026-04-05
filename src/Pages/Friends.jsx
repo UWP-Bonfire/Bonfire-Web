@@ -16,6 +16,7 @@ import "../Styles/friends.css";
 import BellIcon from "../assets/icons/Bell.png";
 import SettingsIcon from "../assets/icons/Settings.svg";
 import DefaultAvatar from "../assets/images/3d_avatar_16.png";
+import MessageIcon from "../assets/images/message.png";
 
 const DEFAULT_AVATAR = DefaultAvatar;
 
@@ -202,7 +203,8 @@ export default function Friends() {
           <h1>Friends Page</h1>
 
           <div className="header-right">
-            {/* Bell notifications kept */}
+            <button className="add-friend" onClick={() => navigate("/addfriends")}>Add Friend</button>
+
             <div className="notif-container">
               <button className="notif-btn" onClick={() => setShowNotifications((s) => !s)}>
                 <img src={BellIcon} alt="Notifications" />
@@ -227,13 +229,7 @@ export default function Friends() {
               )}
             </div>
 
-            <button className="add-friend" onClick={() => navigate("/addfriends")}>
-              Add Friend
-            </button>
-
-            <button className="sign-out-btn" onClick={handleSignOut}>
-              Sign Out
-            </button>
+            <button className="sign-out-btn" onClick={handleSignOut}>Sign Out</button>
           </div>
         </div>
 
@@ -301,7 +297,7 @@ export default function Friends() {
                 className="chat-btn"
                 onClick={() => handleChatClick(friend.id)}
               >
-                💬
+                <img src={MessageIcon} alt="Message" style={{width: 24, height: 24}} />
               </button>
 
               <div className="options-wrapper">

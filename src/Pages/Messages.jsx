@@ -561,7 +561,7 @@ export default function Messages() {
 
     return (
       <>
-        <div className="chat-header" style={{ justifyContent: "space-between" }}>
+        <div className="chat-header" style={{ justifyContent: "flex-start" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
               src={friend.avatar}
@@ -571,10 +571,6 @@ export default function Messages() {
             />
             <span>{isGlobalChat ? "Global Chat Room" : `Chat with ${friend.name}`}</span>
           </div>
-
-          <button className="messages-back-btn" onClick={handleBack}>
-            <img src={BACK_ICON} alt="Back" />
-          </button>
         </div>
 
         <div className="chat-body">
@@ -613,6 +609,9 @@ export default function Messages() {
   return (
     <div className="messages-container">
       <aside className="sidebar">
+        <button className="messages-back-btn" onClick={handleBack} style={{marginBottom: 8, marginTop: 8}}>
+          <img src={BACK_ICON} alt="Back" />
+        </button>
         <h2>Messages</h2>
 
         <div className="dm-list">
