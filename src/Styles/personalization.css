@@ -5,12 +5,13 @@
     var(--bg-2) 48%,
     var(--bg-3) 89%
   );
-  min-height: 100vh;
+  height: 100vh;
   padding: 1.5vw 3vw;
   display: flex;
   flex-direction: column;
   align-items: center;
   font-family: "Arial", sans-serif;
+  overflow: auto;
 }
 
 .personalization-title {
@@ -152,6 +153,16 @@ input[type="color"]::-moz-color-swatch {
   transform: translateY(-2px);
 }
 
+/* Save Button */
+.save-btn {
+  background: var(--accent-1);
+  color: var(--header-bg);
+}
+
+.save-btn:hover {
+  background: var(--accent-2);
+}
+
 /* Logout Button (RED) */
 .logout-btn {
   background: #c84848;
@@ -193,4 +204,9 @@ input[type="color"]::-moz-color-swatch {
     width: 100%;
     max-width: 240px;
   }
+}
+
+/* ---------- Hidden Class ---------- */
+.hidden {
+  display: none;
 }
