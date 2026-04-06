@@ -15,21 +15,53 @@ import {
     updateDoc,
 } from 'firebase/firestore';
 
-const useChat = (friendId) => {
+const CHAT_TYPES = {
+    DIRECT: 'direct',
+    GLOBAL: 'global',
+    GROUP: 'group',
+};
+
+const getDirectChatId = (uid1, uid2) => {
+    return [uid1, uid2].sort((left, right) => left.localeCompare(right)).join('_');
+};
+
+const resolveChatType = (chatTarget) => {
+    if (typeof chatTarget === 'string') {
+        return chatTarget === CHAT_TYPES.GLOBAL ? CHAT_TYPES.GLOBAL : CHAT_TYPES.DIRECT;
+    }
+
+    return chatTarget?.type || CHAT_TYPES.DIRECT;
+};
+
+const getMessagePath = (userId, chatId, chatType) => {
+    if (!userId || !chatId) {
+        return null;
+    }
+
+    if (chatType === CHAT_TYPES.GLOBAL || chatId === CHAT_TYPES.GLOBAL) {
+        return 'messages';
+    }
+
+    if (chatType === CHAT_TYPES.GROUP) {
+        return `groupChats/${chatId}/messages`;
+    }
+
+    return `chats/${getDirectChatId(userId, chatId)}/messages`;
+};
+
+const useChat = (chatTarget) => {
     const { user, userProfile } = useAuth();
     const { blockedUsers } = useBlockUser();
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [userProfiles, setUserProfiles] = useState({});
     const profilesRef = useRef({});
+    const chatId = typeof chatTarget === 'string' ? chatTarget : chatTarget?.id;
+    const chatType = resolveChatType(chatTarget);
 
     useEffect(() => {
         profilesRef.current = userProfiles;
     }, [userProfiles]);
-
-    const getChatId = (uid1, uid2) => {
-        return [uid1, uid2].sort().join('_');
-    };
 
     const fetchUserProfiles = useCallback(async (uids) => {
         const uidsToFetch = uids.filter(uid => !profilesRef.current[uid]);
@@ -62,7 +94,7 @@ const useChat = (friendId) => {
     }, []);
 
     useEffect(() => {
-        if (!user || !friendId) {
+        if (!user || !chatId) {
             setMessages([]);
             setLoading(false);
             return;
@@ -71,12 +103,15 @@ const useChat = (friendId) => {
         setMessages([]);
         setLoading(true);
 
-        const blockedIds = blockedUsers.map(u => u.id);
+        const blockedIds = new Set(blockedUsers.map(u => u.id));
 
-        const isGlobalChat = friendId === 'global';
-        const messagesPath = isGlobalChat
-            ? 'messages'
-            : `chats/${getChatId(user.uid, friendId)}/messages`;
+        const messagesPath = getMessagePath(user.uid, chatId, chatType);
+
+        if (!messagesPath) {
+            setMessages([]);
+            setLoading(false);
+            return;
+        }
 
         const messagesRef = collection(firestore, messagesPath);
         const q = query(messagesRef, orderBy("timestamp"));
@@ -91,7 +126,7 @@ const useChat = (friendId) => {
 
                 // Filter blocked users
                 const filteredMessages = allMessages.filter(
-                    msg => !blockedIds.includes(msg.senderId)
+                    msg => !blockedIds.has(msg.senderId)
                 );
 
                 setMessages(filteredMessages);
@@ -117,15 +152,14 @@ const useChat = (friendId) => {
         );
 
         return () => unsubscribe();
-    }, [user, friendId, blockedUsers, fetchUserProfiles]);
+    }, [user, chatId, chatType, blockedUsers, fetchUserProfiles]);
 
     const sendMessage = useCallback(async (text) => {
-        if (text.trim() === "" || !user || !userProfile || !friendId) return;
+        if (text.trim() === "" || !user || !userProfile || !chatId) return;
 
-        const isGlobalChat = friendId === 'global';
-        const messagesPath = isGlobalChat
-            ? 'messages'
-            : `chats/${getChatId(user.uid, friendId)}/messages`;
+        const messagesPath = getMessagePath(user.uid, chatId, chatType);
+
+        if (!messagesPath) return;
 
         const messagesRef = collection(firestore, messagesPath);
 
@@ -141,13 +175,13 @@ const useChat = (friendId) => {
         } catch (err) {
             console.error("Error sending message: ", err);
         }
-    }, [user, userProfile, friendId]);
+    }, [user, userProfile, chatId, chatType]);
 
     const markMessageAsRead = useCallback(async (messageId) => {
-        if (!user || !friendId || friendId === 'global') return;
+        if (!user || !chatId || chatType !== CHAT_TYPES.DIRECT) return;
 
-        const chatId = getChatId(user.uid, friendId);
-        const messagesPath = `chats/${chatId}/messages`;
+        const directChatId = getDirectChatId(user.uid, chatId);
+        const messagesPath = `chats/${directChatId}/messages`;
         const messageRef = doc(firestore, messagesPath, messageId);
 
         try {
@@ -157,7 +191,7 @@ const useChat = (friendId) => {
         } catch (err) {
             console.error("Error marking message as read: ", err);
         }
-    }, [user, friendId]);
+    }, [user, chatId, chatType]);
 
     return {
         messages,
