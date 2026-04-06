@@ -45,6 +45,121 @@ function handleUnreadSnapshot(friend, setUnreadCounts) {
   };
 }
 
+const CreateGroupChatModal = ({ friends, onClose }) => {
+  const [groupName, setGroupName] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedFriendIds, setSelectedFriendIds] = useState([]);
+
+  const filteredFriends = useMemo(() => {
+    const normalizedSearch = searchValue.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+      return friends;
+    }
+
+    return friends.filter((friend) => friend.name.toLowerCase().includes(normalizedSearch));
+  }, [friends, searchValue]);
+
+  const toggleFriend = (friendId) => {
+    setSelectedFriendIds((prev) => (
+      prev.includes(friendId)
+        ? prev.filter((id) => id !== friendId)
+        : [...prev, friendId]
+    ));
+  };
+
+  return (
+    <div className="group-chat-modal-overlay">
+      <dialog className="group-chat-modal" open aria-labelledby="group-chat-modal-title">
+        <div className="group-chat-modal-header">
+          <div>
+            <h2 id="group-chat-modal-title">Create Group Chat</h2>
+            <p>Choose people from your friends list and set up the group layout.</p>
+          </div>
+          <button
+            type="button"
+            className="group-chat-modal-close"
+            onClick={onClose}
+            aria-label="Close create group chat modal"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="group-chat-modal-body">
+          <label className="group-chat-modal-label" htmlFor="group-chat-name">
+            Group Name
+          </label>
+          <input
+            id="group-chat-name"
+            className="group-chat-modal-input"
+            type="text"
+            placeholder="Enter a group name"
+            value={groupName}
+            onChange={(event) => setGroupName(event.target.value)}
+          />
+          <label className="group-chat-modal-label" htmlFor="group-chat-search">
+            Add Friends
+          </label>
+          <input
+            id="group-chat-search"
+            className="group-chat-modal-input"
+            type="text"
+            placeholder="Search your friends"
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
+          />
+
+          <div className="group-chat-modal-summary">
+            <span>{selectedFriendIds.length} selected</span>
+            <span>{friends.length} available</span>
+          </div>
+
+          <div className="group-chat-friend-list">
+            {filteredFriends.length > 0 ? (
+              filteredFriends.map((friend) => {
+                const isSelected = selectedFriendIds.includes(friend.id);
+
+                return (
+                  <label
+                    key={friend.id}
+                    className={`group-chat-friend-card ${isSelected ? "selected" : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleFriend(friend.id)}
+                    />
+                    <img
+                      src={friend.avatar}
+                      alt={friend.name}
+                      onError={(event) => {
+                        event.currentTarget.src = DEFAULT_PFP;
+                      }}
+                    />
+                    <span>{friend.name}</span>
+                  </label>
+                );
+              })
+            ) : (
+              <div className="group-chat-empty-state">No friends match that search.</div>
+            )}
+          </div>
+        </div>
+
+        <div className="group-chat-modal-actions">
+          <button type="button" className="group-chat-secondary-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="group-chat-primary-btn" disabled>
+            Create Group Chat
+          </button>
+        </div>
+      </dialog>
+    </div>
+  );
+};
+
 /* =========================
    Message Input (TEXT + IMAGE + VOICE)
 ========================= */
@@ -394,6 +509,7 @@ export default function Messages() {
   const myAvatar = userProfile?.avatar || user?.photoURL || DEFAULT_PFP;
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
 
   const blockedIds = useMemo(() => new Set((blockedUsers || []).map((u) => u.id)), [blockedUsers]);
 
@@ -647,7 +763,9 @@ export default function Messages() {
           )}
         </div>
 
-        <button className="create-group">+ Create Group Chat</button>
+        <button className="create-group" onClick={() => setShowCreateGroupModal(true)}>
+          + Create Group Chat
+        </button>
 
         <button
           className="create-group"
@@ -672,6 +790,13 @@ export default function Messages() {
           </div>
         )}
       </main>
+
+      {showCreateGroupModal && (
+        <CreateGroupChatModal
+          friends={normalizedFriends}
+          onClose={() => setShowCreateGroupModal(false)}
+        />
+      )}
     </div>
   );
 }

@@ -503,3 +503,191 @@
   max-width: 480px;
   width: 100%;
 }
+
+.group-chat-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(22, 12, 8, 0.58);
+}
+
+.group-chat-modal {
+  width: min(680px, 100%);
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+  background: #fff7ee;
+  color: #3b241a;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+}
+
+.group-chat-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 22px 14px;
+}
+
+.group-chat-modal-header h2 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.group-chat-modal-header p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  opacity: 0.78;
+}
+
+.group-chat-modal-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.group-chat-modal-body {
+  padding: 0 22px 20px;
+  overflow-y: auto;
+}
+
+.group-chat-modal-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.group-chat-modal-input {
+  width: 100%;
+  margin-bottom: 6px;
+  border: 1px solid #ddc6b6;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #ffffff;
+  color: #3b241a;
+  font-size: 15px;
+  outline: none;
+}
+
+.group-chat-modal-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.group-chat-friend-list {
+  display: grid;
+  gap: 10px;
+  min-height: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.group-chat-friend-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #ead4c7;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+}
+
+.group-chat-friend-card.selected {
+  border-color: #b9704d;
+  background: #f6e2d4;
+}
+
+.group-chat-friend-card input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.group-chat-friend-card img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.group-chat-friend-card span {
+  color: #3b241a;
+  font-size: 15px;
+}
+
+.group-chat-empty-state {
+  padding: 18px 0;
+  text-align: center;
+  color: #8b5a48;
+  font-size: 14px;
+}
+
+.group-chat-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 22px 22px;
+  border-top: 1px solid rgba(139, 90, 72, 0.14);
+}
+
+.group-chat-secondary-btn,
+.group-chat-primary-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.group-chat-secondary-btn {
+  background: #e9d7cb;
+  color: #3b241a;
+}
+
+.group-chat-primary-btn {
+  background: #8b4f33;
+  color: #fffaf5;
+}
+
+.group-chat-primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .group-chat-modal-overlay {
+    padding: 14px;
+  }
+
+  .group-chat-modal {
+    max-height: 92vh;
+  }
+
+  .group-chat-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .group-chat-secondary-btn,
+  .group-chat-primary-btn {
+    width: 100%;
+  }
+}
