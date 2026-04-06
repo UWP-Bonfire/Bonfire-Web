@@ -24,6 +24,9 @@ import {
   where,
   onSnapshot,
   addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
   serverTimestamp,
 } from "firebase/firestore";
 import { firestore } from "../firebase.js";
@@ -32,9 +35,36 @@ const DEFAULT_PFP = DefaultPFP;
 const SEND_ICON = ArrowIcon;
 const BACK_ICON = BackIcon;
 const GLOBAL_ICON = GlobalIcon;
+const DEFAULT_GROUP_ICON = BonfireEmoji;
+const CHAT_TYPES = {
+  DIRECT: "direct",
+  GROUP: "group",
+  GLOBAL: "global",
+};
 
 const safeName = (obj) => obj?.name || obj?.username || obj?.displayName || "Anonymous";
 const safeAvatar = (obj) => obj?.avatar || obj?.profileImage || DEFAULT_PFP;
+const getDirectChatId = (uid1, uid2) => [uid1, uid2].sort((left, right) => left.localeCompare(right)).join("_");
+const resolveChatType = (target) => {
+  if (typeof target !== "string") {
+    return target?.type || CHAT_TYPES.DIRECT;
+  }
+
+  if (target === CHAT_TYPES.GLOBAL) {
+    return CHAT_TYPES.GLOBAL;
+  }
+
+  return CHAT_TYPES.DIRECT;
+};
+const getMessagesPath = (userId, target) => {
+  const targetId = typeof target === "string" ? target : target?.id;
+  const targetType = resolveChatType(target);
+
+  if (!targetId) return null;
+  if (targetType === CHAT_TYPES.GLOBAL || targetId === CHAT_TYPES.GLOBAL) return "messages";
+  if (targetType === CHAT_TYPES.GROUP) return `groupChats/${targetId}/messages`;
+  return `chats/${getDirectChatId(userId, targetId)}/messages`;
+};
 
 function handleUnreadSnapshot(friend, setUnreadCounts) {
   return function (snapshot) {
@@ -45,10 +75,11 @@ function handleUnreadSnapshot(friend, setUnreadCounts) {
   };
 }
 
-const CreateGroupChatModal = ({ friends, onClose }) => {
+const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createError }) => {
   const [groupName, setGroupName] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [selectedFriendIds, setSelectedFriendIds] = useState([]);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const filteredFriends = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
@@ -66,6 +97,29 @@ const CreateGroupChatModal = ({ friends, onClose }) => {
         ? prev.filter((id) => id !== friendId)
         : [...prev, friendId]
     ));
+  };
+
+  const trimmedGroupName = groupName.trim();
+  const canCreate = trimmedGroupName.length > 0 && selectedFriendIds.length >= 2 && !isCreating;
+
+  const handleCreateClick = async () => {
+    setHasSubmitted(true);
+
+    if (!canCreate) {
+      return;
+    }
+
+    const created = await onCreate({
+      name: trimmedGroupName,
+      memberIds: selectedFriendIds,
+    });
+
+    if (created) {
+      setGroupName("");
+      setSearchValue("");
+      setSelectedFriendIds([]);
+      setHasSubmitted(false);
+    }
   };
 
   return (
@@ -98,6 +152,9 @@ const CreateGroupChatModal = ({ friends, onClose }) => {
             value={groupName}
             onChange={(event) => setGroupName(event.target.value)}
           />
+          {hasSubmitted && !trimmedGroupName && (
+            <p className="group-chat-modal-error">A group name is required.</p>
+          )}
           <label className="group-chat-modal-label" htmlFor="group-chat-search">
             Add Friends
           </label>
@@ -145,14 +202,18 @@ const CreateGroupChatModal = ({ friends, onClose }) => {
               <div className="group-chat-empty-state">No friends match that search.</div>
             )}
           </div>
+          {hasSubmitted && selectedFriendIds.length < 2 && (
+            <p className="group-chat-modal-error">Choose at least two friends for this group chat.</p>
+          )}
+          {createError && <p className="group-chat-modal-error">{createError}</p>}
         </div>
 
         <div className="group-chat-modal-actions">
           <button type="button" className="group-chat-secondary-btn" onClick={onClose}>
             Cancel
           </button>
-          <button type="button" className="group-chat-primary-btn" disabled>
-            Create Group Chat
+          <button type="button" className="group-chat-primary-btn" disabled={!canCreate} onClick={handleCreateClick}>
+            {isCreating ? "Creating..." : "Create Group Chat"}
           </button>
         </div>
       </dialog>
@@ -510,6 +571,12 @@ export default function Messages() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [groupChats, setGroupChats] = useState([]);
+  const [groupChatsLoading, setGroupChatsLoading] = useState(true);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [groupCreateError, setGroupCreateError] = useState("");
+  const [isDeletingGroup, setIsDeletingGroup] = useState(false);
+  const [groupDeleteError, setGroupDeleteError] = useState("");
 
   const blockedIds = useMemo(() => new Set((blockedUsers || []).map((u) => u.id)), [blockedUsers]);
 
@@ -527,6 +594,44 @@ export default function Messages() {
   );
 
   useEffect(() => {
+    if (!user) {
+      setGroupChats([]);
+      setGroupChatsLoading(false);
+      return;
+    }
+
+    setGroupChatsLoading(true);
+
+    const groupChatsQuery = query(
+      collection(firestore, "groupChats"),
+      where("memberIds", "array-contains", user.uid)
+    );
+
+    const unsubscribe = onSnapshot(
+      groupChatsQuery,
+      (snapshot) => {
+        const nextGroups = snapshot.docs
+          .map((docSnap) => ({
+            id: docSnap.id,
+            type: CHAT_TYPES.GROUP,
+            avatar: docSnap.data().avatar || DEFAULT_GROUP_ICON,
+            ...docSnap.data(),
+          }))
+          .sort((left, right) => (right.createdAt?.seconds || 0) - (left.createdAt?.seconds || 0));
+
+        setGroupChats(nextGroups);
+        setGroupChatsLoading(false);
+      },
+      (error) => {
+        console.error("Error loading group chats:", error);
+        setGroupChatsLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
     if (!selectedFriend && location.state?.friendId && normalizedFriends.length > 0) {
       const friendId = location.state.friendId;
       const found = normalizedFriends.find((f) => f.id === friendId);
@@ -541,13 +646,93 @@ export default function Messages() {
     }
   }, [selectedFriend, blockedIds]);
 
+  const handleCreateGroupChat = async ({ name, memberIds }) => {
+    if (!user) return false;
+
+    if (!name.trim()) {
+      setGroupCreateError("A group name is required.");
+      return false;
+    }
+
+    if (memberIds.length < 2) {
+      setGroupCreateError("Choose at least two friends for this group chat.");
+      return false;
+    }
+
+    setIsCreatingGroup(true);
+    setGroupCreateError("");
+
+    try {
+      const uniqueMemberIds = Array.from(new Set([user.uid, ...memberIds]));
+      const docRef = await addDoc(collection(firestore, "groupChats"), {
+        name: name.trim(),
+        memberIds: uniqueMemberIds,
+        createdAt: serverTimestamp(),
+        createdBy: user.uid,
+        avatar: DEFAULT_GROUP_ICON,
+        type: CHAT_TYPES.GROUP,
+      });
+
+      setSelectedFriend({
+        id: docRef.id,
+        type: CHAT_TYPES.GROUP,
+        name: name.trim(),
+        memberIds: uniqueMemberIds,
+        avatar: DEFAULT_GROUP_ICON,
+      });
+      setShowCreateGroupModal(false);
+      return true;
+    } catch (error) {
+      console.error("Error creating group chat:", error);
+      setGroupCreateError("Failed to create the group chat.");
+      return false;
+    } finally {
+      setIsCreatingGroup(false);
+    }
+  };
+
+  const handleDeleteGroupChat = async (group) => {
+    if (!user || !group?.id || group.type !== CHAT_TYPES.GROUP) {
+      return;
+    }
+
+    if (group.createdBy !== user.uid) {
+      return;
+    }
+
+    const shouldDelete = globalThis.confirm(`Delete group chat "${group.name}"? This cannot be undone.`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    setIsDeletingGroup(true);
+    setGroupDeleteError("");
+
+    try {
+      const messagesRef = collection(firestore, "groupChats", group.id, "messages");
+      const messagesSnapshot = await getDocs(messagesRef);
+
+      await Promise.all(messagesSnapshot.docs.map((messageDoc) => deleteDoc(messageDoc.ref)));
+      await deleteDoc(doc(firestore, "groupChats", group.id));
+
+      if (selectedFriend?.id === group.id) {
+        setSelectedFriend(null);
+      }
+    } catch (error) {
+      console.error("Error deleting group chat:", error);
+      setGroupDeleteError("Failed to delete the group chat.");
+    } finally {
+      setIsDeletingGroup(false);
+    }
+  };
+
   useEffect(() => {
     if (!user || normalizedFriends.length === 0) return;
 
     const unsubscribes = normalizedFriends.map((friend) => {
       if (friend.isMuted) return () => {};
 
-      const chatId = [user.uid, friend.id].sort().join("_");
+      const chatId = getDirectChatId(user.uid, friend.id);
       const messagesRef = collection(firestore, "chats", chatId, "messages");
       const q = query(
         messagesRef,
@@ -575,7 +760,19 @@ export default function Messages() {
   }
 
   const ChatView = ({ friend }) => {
-    const isGlobalChat = friend.id === "global";
+    const isGlobalChat = friend.id === CHAT_TYPES.GLOBAL || friend.type === CHAT_TYPES.GLOBAL;
+    const isGroupChat = friend.type === CHAT_TYPES.GROUP;
+    const canDeleteGroup = isGroupChat && friend.createdBy === user?.uid;
+    let chatType = CHAT_TYPES.DIRECT;
+    if (isGlobalChat) {
+      chatType = CHAT_TYPES.GLOBAL;
+    } else if (isGroupChat) {
+      chatType = CHAT_TYPES.GROUP;
+    }
+    const chatTarget = {
+      id: friend.id,
+      type: chatType,
+    };
 
     const {
       messages,
@@ -583,19 +780,17 @@ export default function Messages() {
       sendMessage,
       userProfiles,
       markMessageAsRead,
-    } = useChat(friend.id);
+    } = useChat(chatTarget);
 
     const { uploadImage, isUploading, error } = useImageUpload();
-
-    const chatId = [user.uid, friend.id].sort().join("_");
+    const memberCount = isGroupChat ? Math.max((friend.memberIds?.length || 1) - 1, 0) : 0;
 
     const sendImageOnly = async (file) => {
       if (!file || !user || !friend?.id) return;
       if (!file.type?.startsWith("image/")) return;
 
-      const messagesPath = isGlobalChat
-        ? "messages"
-        : `chats/${getChatId(user.uid, friend.id)}/messages`;
+      const messagesPath = getMessagesPath(user.uid, chatTarget);
+      if (!messagesPath) return;
 
       try {
         const imageUrl = await uploadImage(file);
@@ -620,9 +815,8 @@ export default function Messages() {
     const sendVoiceOnly = async ({ audioUrl, audioName, audioType }) => {
       if (!audioUrl || !user || !friend?.id) return;
 
-      const messagesPath = isGlobalChat
-        ? "messages"
-        : `chats/${getChatId(user.uid, friend.id)}/messages`;
+      const messagesPath = getMessagesPath(user.uid, chatTarget);
+      if (!messagesPath) return;
 
       try {
         const messagesRef = collection(firestore, messagesPath);
@@ -643,31 +837,6 @@ export default function Messages() {
       }
     };
 
-    const sendEmojiOnly = async (emoji) => {
-      if (!emoji || !user || !friend?.id) return;
-
-      const messagesPath = isGlobalChat
-        ? "messages"
-        : `chats/${getChatId(user.uid, friend.id)}/messages`;
-
-      try {
-        const messagesRef = collection(firestore, messagesPath);
-
-        await addDoc(messagesRef, {
-          text: "",
-          emoji: emoji.symbol,
-          emojiId: emoji.id,
-          timestamp: serverTimestamp(),
-          senderId: user.uid,
-          displayName: userProfile?.name || user?.displayName || "Anonymous",
-          photoURL: userProfile?.avatar || user?.photoURL || DEFAULT_PFP,
-          read: false,
-        });
-      } catch (err) {
-        console.error("Error sending emoji:", err);
-      }
-    };
-
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -677,7 +846,7 @@ export default function Messages() {
 
     return (
       <>
-        <div className="chat-header" style={{ justifyContent: "flex-start" }}>
+        <div className="chat-header chat-header-row">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
               src={friend.avatar}
@@ -685,8 +854,22 @@ export default function Messages() {
               className="chat-header-avatar"
               onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
             />
-            <span>{isGlobalChat ? "Global Chat Room" : `Chat with ${friend.name}`}</span>
+            <div className="chat-header-copy">
+              <span>{isGlobalChat ? "Global Chat Room" : (isGroupChat ? friend.name : `Chat with ${friend.name}`)}</span>
+              {isGroupChat && <small>{memberCount} friend{memberCount === 1 ? "" : "s"} added</small>}
+            </div>
           </div>
+
+          {canDeleteGroup && (
+            <button
+              type="button"
+              className="delete-group-btn"
+              onClick={() => handleDeleteGroupChat(friend)}
+              disabled={isDeletingGroup}
+            >
+              {isDeletingGroup ? "Deleting..." : "Delete Group Chat"}
+            </button>
+          )}
         </div>
 
         <div className="chat-body">
@@ -708,6 +891,7 @@ export default function Messages() {
           <div ref={messagesEndRef} />
         </div>
 
+        {groupDeleteError && <div style={{ color: "brown", padding: "6px 0" }}>{groupDeleteError}</div>}
         {error && <div style={{ color: "brown", padding: "6px 0" }}>{error}</div>}
         {isUploading && <div style={{ padding: "6px 0" }}>Uploading image...</div>}
 
@@ -734,32 +918,64 @@ export default function Messages() {
           {friendsLoading ? (
             <div>Loading friends...</div>
           ) : (
-            normalizedFriends.map((friend) => (
-              <div
-                className={`dm ${selectedFriend?.id === friend.id ? "active" : ""}`}
-                key={friend.id}
-                onClick={() => setSelectedFriend(friend)}
-                tabIndex={0}
-                role="button"
-                aria-label={`Open chat with ${friend.name}`}
-                onKeyDown={e => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    setSelectedFriend(friend);
-                  }
-                }}
-              >
-                <img
-                  src={friend.avatar}
-                  alt={friend.name}
-                  onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
-                />
-                <span>{friend.name}</span>
+            <>
+              {normalizedFriends.map((friend) => (
+                <div
+                  className={`dm ${selectedFriend?.id === friend.id ? "active" : ""}`}
+                  key={friend.id}
+                  onClick={() => setSelectedFriend(friend)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Open chat with ${friend.name}`}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setSelectedFriend(friend);
+                    }
+                  }}
+                >
+                  <img
+                    src={friend.avatar}
+                    alt={friend.name}
+                    onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
+                  />
+                  <span>{friend.name}</span>
 
-                {unreadCounts[friend.id] > 0 && !friend.isMuted && (
-                  <span className="unread-count">{unreadCounts[friend.id]}</span>
-                )}
-              </div>
-            ))
+                  {unreadCounts[friend.id] > 0 && !friend.isMuted && (
+                    <span className="unread-count">{unreadCounts[friend.id]}</span>
+                  )}
+                </div>
+              ))}
+
+              {groupChatsLoading ? (
+                <div className="group-chat-empty-state">Loading group chats...</div>
+              ) : groupChats.length > 0 ? (
+                groupChats.map((group) => (
+                  <div
+                    className={`dm ${selectedFriend?.id === group.id ? "active" : ""}`}
+                    key={group.id}
+                    onClick={() => setSelectedFriend(group)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Open group chat ${group.name}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setSelectedFriend(group);
+                      }
+                    }}
+                  >
+                    <img
+                      src={group.avatar || DEFAULT_GROUP_ICON}
+                      alt={group.name}
+                      onError={(e) => (e.currentTarget.src = DEFAULT_GROUP_ICON)}
+                    />
+                    <div className="group-chat-sidebar-copy">
+                      <span>{group.name}</span>
+                      <small>{Math.max((group.memberIds?.length || 1) - 1, 0)} friends</small>
+                    </div>
+                  </div>
+                ))
+              ) : null}
+            </>
           )}
         </div>
 
@@ -771,7 +987,8 @@ export default function Messages() {
           className="create-group"
           onClick={() =>
             setSelectedFriend({
-              id: "global",
+              id: CHAT_TYPES.GLOBAL,
+              type: CHAT_TYPES.GLOBAL,
               name: "Global Chat Room",
               avatar: GLOBAL_ICON,
             })
@@ -795,6 +1012,9 @@ export default function Messages() {
         <CreateGroupChatModal
           friends={normalizedFriends}
           onClose={() => setShowCreateGroupModal(false)}
+          onCreate={handleCreateGroupChat}
+          isCreating={isCreatingGroup}
+          createError={groupCreateError}
         />
       )}
     </div>

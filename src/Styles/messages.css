@@ -581,6 +581,13 @@
   outline: none;
 }
 
+.group-chat-modal-error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #a12f2f;
+  font-weight: 700;
+}
+
 .group-chat-modal-summary {
   display: flex;
   justify-content: space-between;
@@ -673,6 +680,73 @@
   cursor: not-allowed;
 }
 
+.group-chat-sidebar-section {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.group-chat-sidebar-title {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sidebar-text);
+}
+
+.group-chat-sidebar-list {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.group-chat-sidebar-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.group-chat-sidebar-copy small {
+  font-size: 11px;
+  opacity: 0.8;
+  color: var(--sidebar-text);
+}
+
+.chat-header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chat-header-copy small {
+  font-size: 12px;
+  opacity: 0.78;
+}
+
+.chat-header-row {
+  justify-content: space-between;
+}
+
+.delete-group-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #8f2f2f;
+  color: #fff7f4;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.delete-group-btn:hover {
+  transform: translateY(-1px);
+}
+
+.delete-group-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .group-chat-modal-overlay {
     padding: 14px;
@@ -688,6 +762,15 @@
 
   .group-chat-secondary-btn,
   .group-chat-primary-btn {
+    width: 100%;
+  }
+
+  .chat-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .delete-group-btn {
     width: 100%;
   }
 }
