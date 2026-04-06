@@ -153,6 +153,16 @@ input[type="color"]::-moz-color-swatch {
   transform: translateY(-2px);
 }
 
+/* Save Button */
+.save-btn {
+  background: var(--accent-1);
+  color: var(--header-bg);
+}
+
+.save-btn:hover {
+  background: var(--accent-2);
+}
+
 /* Logout Button (RED) */
 .logout-btn {
   background: #c84848;
