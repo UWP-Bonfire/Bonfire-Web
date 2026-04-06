@@ -7,7 +7,7 @@ const useImageUpload = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState(null);
 
-    const uploadImage = async (imageFile) => {
+    const uploadImage = async (imageFile, folder = 'Chat_Media') => {
         if (!imageFile) {
             setError('No image file provided.');
             return;
@@ -19,7 +19,7 @@ const useImageUpload = () => {
         const fileId = uuidv4();
         const fileExtension = imageFile.name.split('.').pop();
         const fileName = `${fileId}.${fileExtension}`;
-        const storageRef = ref(storage, `Chat_Media/${fileName}`);
+        const storageRef = ref(storage, `${folder}/${fileName}`);
 
         try {
             const snapshot = await uploadBytes(storageRef, imageFile);

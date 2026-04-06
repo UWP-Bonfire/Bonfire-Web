@@ -269,7 +269,7 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
                         type: "audio/webm",
                       });
 
-                      const audioUrl = await uploadImage(audioFile);
+                      const audioUrl = await uploadImage(audioFile, "Voice_Messages");
 
                       if (audioUrl && typeof onSendVoice === "function") {
                         await onSendVoice({
