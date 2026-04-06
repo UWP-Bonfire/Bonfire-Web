@@ -195,3 +195,8 @@ input[type="color"]::-moz-color-swatch {
     max-width: 240px;
   }
 }
+
+/* ---------- Hidden Class ---------- */
+.hidden {
+  display: none;
+}

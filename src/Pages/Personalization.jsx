@@ -135,7 +135,7 @@ export default function Personalization() {
         </div>
 
         {/* Username Color */}
-        <div className="section">
+        <div className="section hidden">
           <h2>Username Color</h2>
           <input
             type="color"
@@ -145,7 +145,7 @@ export default function Personalization() {
         </div>
 
         {/* Background Color */}
-        <div className="section">
+        <div className="section hidden">
           <h2>Profile Background Color</h2>
           <input
             type="color"
