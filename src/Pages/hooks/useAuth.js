@@ -64,7 +64,8 @@ const useAuth = () => {
                         avatar: 'https://firebasestorage.googleapis.com/v0/b/bonfire-d8db1.firebasestorage.app/o/Profile_Pictures%2Flogo.png?alt=media&token=15ac7dfc-d970-49f2-a9c6-429dd0656f0a',
                         bio: 'Welcome to Bonfire!',
                         bgColor: '#ffd9ba',
-                        usernameColor: '#c84848'
+                        usernameColor: '#c84848',
+                        stylePreference: 'light'
                     };
                     setDoc(userRef, newProfile);
                     setUserProfile(newProfile);
@@ -79,6 +80,14 @@ const useAuth = () => {
             return () => unsubscribeProfile();
         }
     }, [user]); // This effect now correctly depends on the user state
+
+    useEffect(() => {
+        if (userProfile?.stylePreference === 'dark') {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.remove('dark');
+        }
+    }, [userProfile]);
 
     return { user, userProfile, loading };
 };
@@ -155,7 +164,8 @@ const useAuthentication = () => {
                     avatar: 'https://firebasestorage.googleapis.com/v0/b/bonfire-d8db1.firebasestorage.app/o/Profile_Pictures%2Flogo.png?alt=media&token=15ac7dfc-d970-49f2-a9c6-429dd0656f0a',
                     bio: 'Welcome to Bonfire!',
                     bgColor: '#ffd9ba',
-                    usernameColor: '#c84848'
+                    usernameColor: '#c84848',
+                    stylePreference: 'light'
                 };
                 await setDoc(userRef, initialProfile);
                 
