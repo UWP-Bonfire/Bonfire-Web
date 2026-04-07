@@ -528,31 +528,6 @@ export default function Messages() {
       }
     };
 
-    const sendEmojiOnly = async (emoji) => {
-      if (!emoji || !user || !friend?.id) return;
-
-      const messagesPath = isGlobalChat
-        ? "messages"
-        : `chats/${getChatId(user.uid, friend.id)}/messages`;
-
-      try {
-        const messagesRef = collection(firestore, messagesPath);
-
-        await addDoc(messagesRef, {
-          text: "",
-          emoji: emoji.symbol,
-          emojiId: emoji.id,
-          timestamp: serverTimestamp(),
-          senderId: user.uid,
-          displayName: userProfile?.name || user?.displayName || "Anonymous",
-          photoURL: userProfile?.avatar || user?.photoURL || DEFAULT_PFP,
-          read: false,
-        });
-      } catch (err) {
-        console.error("Error sending emoji:", err);
-      }
-    };
-
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
