@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import DefaultPFP from "../assets/images/3d_avatar_16.png";
 import ArrowIcon from "../assets/images/arrow.png";
@@ -445,7 +446,7 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
                         type: "audio/webm",
                       });
 
-                      const audioUrl = await uploadImage(audioFile);
+                      const audioUrl = await uploadImage(audioFile, "Voice_Messages");
 
                       if (audioUrl && typeof onSendVoice === "function") {
                         await onSendVoice({
