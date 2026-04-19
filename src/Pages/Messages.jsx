@@ -36,7 +36,7 @@ const DEFAULT_PFP = DefaultPFP;
 const SEND_ICON = ArrowIcon;
 const BACK_ICON = BackIcon;
 const GLOBAL_ICON = GlobalIcon;
-const DEFAULT_GROUP_ICON = BonfireEmoji;
+const DEFAULT_GROUP_ICON = 'https://firebasestorage.googleapis.com/v0/b/bonfire-d8db1.firebasestorage.app/o/Profile_Pictures%2Flogo.png?alt=media&token=15ac7dfc-d970-49f2-a9c6-429dd0656f0a';
 const CHAT_TYPES = {
   DIRECT: "direct",
   GROUP: "group",
