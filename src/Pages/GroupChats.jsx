@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/groupchats.css"; 
 
+const DEFAULT_GROUP_LOGO = 'https://firebasestorage.googleapis.com/v0/b/bonfire-d8db1.firebasestorage.app/o/Profile_Pictures%2Flogo.png?alt=media&token=15ac7dfc-d970-49f2-a9c6-429dd0656f0a';
+
 export default function GroupChats() {
   const navigate = useNavigate();
 
@@ -11,12 +13,14 @@ export default function GroupChats() {
       name: "Bonfire Team",
       members: ["friend1", "friend2", "friend3"],
       lastMessage: "UI looks great, let's finalize soon!",
+      avatar: DEFAULT_GROUP_LOGO,
     },
     {
       id: 2,
       name: "Gaming Squad",
       members: ["friend4", "friend5", "friend6"],
       lastMessage: "That match last night was insane 😂",
+      avatar: DEFAULT_GROUP_LOGO,
     },
   ]);
 
@@ -107,6 +111,7 @@ export default function GroupChats() {
       name: groupName.trim(),
       members: selectedFriends,
       lastMessage: "Group created 🎉",
+      avatar: DEFAULT_GROUP_LOGO,
     };
 
     setGroups((g) => [newGroup, ...g]);
@@ -135,7 +140,7 @@ export default function GroupChats() {
               onClick={() => setSelectedGroup(group)}
             >
               <img
-                src="/Profile Images/IMG_1843.png"
+                src={group.avatar || DEFAULT_GROUP_LOGO}
                 alt="group"
                 className="group-avatar"
               />
@@ -160,7 +165,7 @@ export default function GroupChats() {
         <div className="groupchats-chat-header">
           <div className="chat-header-info">
             <img
-              src="/Profile Images/IMG_1843.png"
+              src={selectedGroup.avatar || DEFAULT_GROUP_LOGO}
               alt="group"
               className="chat-header-avatar"
             />
