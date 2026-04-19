@@ -7,14 +7,12 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [birthDay, setBirthDay] = useState('');
-  const [birthMonth, setBirthMonth] = useState('');
-  const [birthYear, setBirthYear] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const { signUp, error, loading, verificationSent } = useAuthentication();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-    await signUp(email, password, username, birthDay, birthMonth, birthYear);
+    await signUp(email, password, username, birthDate);
   };
 
   return (
@@ -55,8 +53,8 @@ export default function SignUp() {
           <input
             type="date"
             id="birthday"
-            value={birthDay}
-            onChange={(e) => setBirthDay(e.target.value)}
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
             required
           />
 
