@@ -51,39 +51,12 @@ export default function SignUp() {
             required
           />
 
-          <label htmlFor="birthDay">Birth Day</label>
+          <label htmlFor="birthday">Birthday</label>
           <input
-            type="number"
-            id="birthDay"
-            placeholder="DD (1-31)"
-            min="1"
-            max="31"
+            type="date"
+            id="birthday"
             value={birthDay}
             onChange={(e) => setBirthDay(e.target.value)}
-            required
-          />
-
-          <label htmlFor="birthMonth">Birth Month</label>
-          <input
-            type="number"
-            id="birthMonth"
-            placeholder="MM (1-12)"
-            min="1"
-            max="12"
-            value={birthMonth}
-            onChange={(e) => setBirthMonth(e.target.value)}
-            required
-          />
-
-          <label htmlFor="birthYear">Birth Year</label>
-          <input
-            type="number"
-            id="birthYear"
-            placeholder="YYYY"
-            min="1900"
-            max={new Date().getFullYear()}
-            value={birthYear}
-            onChange={(e) => setBirthYear(e.target.value)}
             required
           />
 
