@@ -117,11 +117,17 @@ const useAuthentication = () => {
         }
     };
 
-    const signUp = async (email, password, username, birthDay, birthMonth, birthYear) => {
+    const signUp = async (email, password, username, birthDate) => {
         setLoading(true);
         setError('');
         setVerificationSent(false);
         try {
+            // Parse birth date
+            const birthDateObj = new Date(birthDate);
+            const birthDay = birthDateObj.getDate();
+            const birthMonth = birthDateObj.getMonth() + 1; // Months are 0-indexed
+            const birthYear = birthDateObj.getFullYear();
+
             // Validate birth date
             const birthDateValidation = validateBirthDate(birthDay, birthMonth, birthYear);
             if (!birthDateValidation.isValid) {
@@ -146,8 +152,8 @@ const useAuthentication = () => {
                 await updateProfile(user, { displayName: username });
                 
                 // Calculate age and get isOver18 flag
-                const over18 = isOver18(parseInt(birthDay, 10), parseInt(birthMonth, 10), parseInt(birthYear, 10));
-                const birthDateString = createBirthDateString(parseInt(birthDay, 10), parseInt(birthMonth, 10), parseInt(birthYear, 10));
+                const over18 = isOver18(birthDay, birthMonth, birthYear);
+                const birthDateString = createBirthDateString(birthDay, birthMonth, birthYear);
                 
                 // Store age verification data in user document
                 const userRef = doc(firestore, 'users', user.uid);
@@ -157,9 +163,6 @@ const useAuthentication = () => {
                     displayName: username,
                     name: username,
                     birthDate: birthDateString,
-                    birthDay: parseInt(birthDay, 10),
-                    birthMonth: parseInt(birthMonth, 10),
-                    birthYear: parseInt(birthYear, 10),
                     isOver18: over18,
                     avatar: 'https://firebasestorage.googleapis.com/v0/b/bonfire-d8db1.firebasestorage.app/o/Profile_Pictures%2Flogo.png?alt=media&token=15ac7dfc-d970-49f2-a9c6-429dd0656f0a',
                     bio: 'Welcome to Bonfire!',
