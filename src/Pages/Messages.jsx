@@ -76,19 +76,19 @@ function handleUnreadSnapshot(friend, setUnreadCounts) {
   };
 }
 
+
 const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createError }) => {
+  const { userProfile } = useAuth();
   const [groupName, setGroupName] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [selectedFriendIds, setSelectedFriendIds] = useState([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [is18Plus, setIs18Plus] = useState(false);
+  const [show18PlusPrompt, setShow18PlusPrompt] = useState(false);
 
   const filteredFriends = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
-
-    if (!normalizedSearch) {
-      return friends;
-    }
-
+    if (!normalizedSearch) return friends;
     return friends.filter((friend) => friend.name.toLowerCase().includes(normalizedSearch));
   }, [friends, searchValue]);
 
@@ -105,22 +105,36 @@ const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createEr
 
   const handleCreateClick = async () => {
     setHasSubmitted(true);
-
-    if (!canCreate) {
-      return;
-    }
-
+    if (!canCreate) return;
     const created = await onCreate({
       name: trimmedGroupName,
       memberIds: selectedFriendIds,
+      is18Plus,
     });
-
     if (created) {
       setGroupName("");
       setSearchValue("");
       setSelectedFriendIds([]);
+      setIs18Plus(false);
       setHasSubmitted(false);
     }
+  };
+
+  const handle18PlusToggle = (e) => {
+    if (!is18Plus && e.target.checked) {
+      setShow18PlusPrompt(true);
+    } else {
+      setIs18Plus(false);
+    }
+  };
+
+  const confirm18Plus = () => {
+    setIs18Plus(true);
+    setShow18PlusPrompt(false);
+  };
+  const cancel18Plus = () => {
+    setIs18Plus(false);
+    setShow18PlusPrompt(false);
   };
 
   return (
@@ -141,7 +155,21 @@ const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createEr
           </button>
         </div>
 
+
         <div className="group-chat-modal-body">
+          {/* 18+ Group Chat Option (only for 18+ users) - moved to top */}
+          {userProfile?.isOver18 && (
+            <div className="modal-18plus-option modal-18plus-top">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={is18Plus}
+                  onChange={handle18PlusToggle}
+                />
+                Create 18+ groupchat
+              </label>
+            </div>
+          )}
           <label className="group-chat-modal-label" htmlFor="group-chat-name">
             Group Name
           </label>
@@ -177,7 +205,6 @@ const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createEr
             {filteredFriends.length > 0 ? (
               filteredFriends.map((friend) => {
                 const isSelected = selectedFriendIds.includes(friend.id);
-
                 return (
                   <label
                     key={friend.id}
@@ -217,6 +244,22 @@ const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createEr
             {isCreating ? "Creating..." : "Create Group Chat"}
           </button>
         </div>
+
+        {/* 18+ Prompt Dialog */}
+        {show18PlusPrompt && (
+          <div className="modal-18plus-warning-overlay">
+            <div className="modal-18plus-warning-box">
+              <h3>18+ Group Chat</h3>
+              <p>
+                You are designating this group chat for mature content. Anyone under the age of 18 will be removed upon attempting to open the chat. Are you sure you want to enable 18+ mode?
+              </p>
+              <div className="modal-18plus-warning-actions">
+                <button onClick={confirm18Plus} className="confirm-btn">Yes, Enable 18+ Mode</button>
+                <button onClick={cancel18Plus} className="cancel-btn">Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
       </dialog>
     </div>
   );
@@ -647,22 +690,18 @@ export default function Messages() {
     }
   }, [selectedFriend, blockedIds]);
 
-  const handleCreateGroupChat = async ({ name, memberIds }) => {
+  const handleCreateGroupChat = async ({ name, memberIds, is18Plus }) => {
     if (!user) return false;
-
     if (!name.trim()) {
       setGroupCreateError("A group name is required.");
       return false;
     }
-
     if (memberIds.length < 2) {
       setGroupCreateError("Choose at least two friends for this group chat.");
       return false;
     }
-
     setIsCreatingGroup(true);
     setGroupCreateError("");
-
     try {
       const uniqueMemberIds = Array.from(new Set([user.uid, ...memberIds]));
       const docRef = await addDoc(collection(firestore, "groupChats"), {
@@ -672,14 +711,15 @@ export default function Messages() {
         createdBy: user.uid,
         avatar: DEFAULT_GROUP_ICON,
         type: CHAT_TYPES.GROUP,
+        is18Plus: !!is18Plus,
       });
-
       setSelectedFriend({
         id: docRef.id,
         type: CHAT_TYPES.GROUP,
         name: name.trim(),
         memberIds: uniqueMemberIds,
         avatar: DEFAULT_GROUP_ICON,
+        is18Plus: !!is18Plus,
       });
       setShowCreateGroupModal(false);
       return true;
@@ -760,9 +800,26 @@ export default function Messages() {
     });
   }
 
+  const [hasSeen18PlusWarning, setHasSeen18PlusWarning] = useState({});
+  const [showMinor18PlusBlock, setShowMinor18PlusBlock] = useState(false);
+  const [pendingRemoveGroupId, setPendingRemoveGroupId] = useState(null);
+
+  const removeUserFromGroup = async (groupId) => {
+    if (!user) return;
+    try {
+      const groupRef = doc(firestore, "groupChats", groupId);
+      await updateDoc(groupRef, {
+        memberIds: groupChats.find(g => g.id === groupId)?.memberIds?.filter(id => id !== user.uid) || [],
+      });
+    } catch (err) {
+      console.error("Failed to remove user from 18+ group chat", err);
+    }
+  };
+
   const ChatView = ({ friend }) => {
     const isGlobalChat = friend.id === CHAT_TYPES.GLOBAL || friend.type === CHAT_TYPES.GLOBAL;
     const isGroupChat = friend.type === CHAT_TYPES.GROUP;
+    const is18PlusGroup = isGroupChat && friend.is18Plus;
     const canDeleteGroup = isGroupChat && friend.createdBy === user?.uid;
     let chatType = CHAT_TYPES.DIRECT;
     if (isGlobalChat) {
@@ -840,6 +897,46 @@ export default function Messages() {
 
     const messagesEndRef = useRef(null);
 
+
+
+    // 18+ group chat entry logic
+    useEffect(() => {
+      if (!is18PlusGroup) return;
+      if (!userProfile) return;
+
+      // Under 18: always block and show overlay, then remove
+      if (!userProfile.isOver18) {
+        setShowMinor18PlusBlock(true);
+        setPendingRemoveGroupId(friend.id);
+        return;
+      }
+
+      // Over 18: only show warning once per group
+      if (hasSeen18PlusWarning[friend.id]) return;
+      const proceed = window.confirm("This group chat is designated for mature content (18+). Do you wish to proceed? If you decline, you will be removed from this chat.");
+      if (proceed) {
+        setHasSeen18PlusWarning((prev) => ({ ...prev, [friend.id]: true }));
+      } else {
+        removeUserFromGroup(friend.id);
+        setSelectedFriend(null);
+        setHasSeen18PlusWarning((prev) => ({ ...prev, [friend.id]: true }));
+      }
+    }, [is18PlusGroup, userProfile, friend.id]);
+
+    // Remove minor from group after showing overlay
+    useEffect(() => {
+      if (showMinor18PlusBlock && pendingRemoveGroupId) {
+        const timer = setTimeout(() => {
+          removeUserFromGroup(pendingRemoveGroupId);
+          setSelectedFriend(null);
+          setHasSeen18PlusWarning((prev) => ({ ...prev, [pendingRemoveGroupId]: true }));
+          setShowMinor18PlusBlock(false);
+          setPendingRemoveGroupId(null);
+        }, 2500);
+        return () => clearTimeout(timer);
+      }
+    }, [showMinor18PlusBlock, pendingRemoveGroupId]);
+
     useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
       markUnreadMessages(messages, user, markMessageAsRead);
@@ -847,7 +944,15 @@ export default function Messages() {
 
     return (
       <>
-        <div className="chat-header chat-header-row">
+        {showMinor18PlusBlock && (
+          <div className="modal-18plus-warning-overlay">
+            <div className="modal-18plus-warning-box">
+              <h3>18+ Group Chat</h3>
+              <p>This group chat is designated for mature content. You are under 18 and will be removed from this chat.</p>
+            </div>
+          </div>
+        )}
+        <div className={showMinor18PlusBlock ? "chat-header chat-header-row blur-on-18plus" : "chat-header chat-header-row"}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
               src={friend.avatar}
@@ -873,7 +978,7 @@ export default function Messages() {
           )}
         </div>
 
-        <div className="chat-body">
+        <div className={showMinor18PlusBlock ? "chat-body blur-on-18plus" : "chat-body"}>
           {messagesLoading && (!messages || messages.length === 0) ? (
             <div>Loading messages...</div>
           ) : (
@@ -896,7 +1001,7 @@ export default function Messages() {
         {error && <div style={{ color: "brown", padding: "6px 0" }}>{error}</div>}
         {isUploading && <div style={{ padding: "6px 0" }}>Uploading image...</div>}
 
-        <div className="input-box">
+        <div className={showMinor18PlusBlock ? "input-box blur-on-18plus" : "input-box"}>
           <MessageInput
             onSendMessage={sendMessage}
             onSendImage={sendImageOnly}
