@@ -1,3 +1,92 @@
+/* Blur effect for 18+ block */
+.blur-on-18plus {
+  filter: blur(6px) grayscale(0.2) brightness(0.95);
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.2s;
+}
+/* 18+ Group Chat Minor Block Overlay */
+.modal-18plus-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-18plus-warning-box {
+  background: #fff8f3;
+  color: #a12f2f;
+  border: 2px solid #e57373;
+  border-radius: 16px;
+  padding: 32px 36px;
+  max-width: 350px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.modal-18plus-warning-box h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.5rem;
+  color: #e57373;
+}
+.modal-18plus-warning-box p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #a12f2f;
+}
+/* 18+ Group Chat Option */
+.modal-18plus-option {
+  display: flex;
+  align-items: center;
+  margin: 0 0 18px 0;
+  padding: 0 0 0 0;
+}
+
+.modal-18plus-top {
+  margin-bottom: 18px;
+  margin-top: 0;
+  justify-content: flex-start;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  cursor: pointer;
+  gap: 8px;
+  color: var(--text-main, #222);
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: #e57373;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  cursor: not-allowed;
+}
+
+.custom-checkmark {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e57373;
+  border-radius: 4px;
+  background: #fff;
+  color: #e57373;
+  text-align: center;
+  line-height: 16px;
+  font-size: 14px;
+  margin-right: 6px;
+  font-weight: bold;
+  pointer-events: none;
+  opacity: 0.7;
+}
 /* Overall Container*/
 .messages-container {
   display: flex;
