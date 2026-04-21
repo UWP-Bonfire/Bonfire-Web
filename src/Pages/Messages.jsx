@@ -274,6 +274,9 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [recordingNotification, setRecordingNotification] = useState("");
+  const [showSpoilerToggle, setShowSpoilerToggle] = useState(false);
+  const [spoilerChecked, setSpoilerChecked] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const { uploadImage } = useImageUpload();
   const fileRef = useRef(null);
   const textareaRef = useRef(null);
@@ -329,17 +332,38 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
 
     if (!file.type?.startsWith("image/")) {
       e.target.value = "";
+      setShowSpoilerToggle(false);
+      setImagePreviewUrl("");
       return;
     }
 
+    setShowSpoilerToggle(true);
+    // Show preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreviewUrl(reader.result);
+    };
+    reader.readAsDataURL(file);
+    // Store file in ref for sending after toggle
+    fileRef.current.fileToSend = file;
+  };
+
+  const handleSendImageWithSpoiler = async () => {
+    const file = fileRef.current.fileToSend;
+    if (!file) return;
     if (typeof onSendImage !== "function") {
       console.error("onSendImage is not a function");
-      e.target.value = "";
+      setShowSpoilerToggle(false);
+      fileRef.current.value = "";
+      setImagePreviewUrl("");
       return;
     }
-
-    await onSendImage(file);
-    e.target.value = "";
+    await onSendImage(file, spoilerChecked);
+    setShowSpoilerToggle(false);
+    setSpoilerChecked(false);
+    fileRef.current.value = "";
+    fileRef.current.fileToSend = null;
+    setImagePreviewUrl("");
   };
 
   const handleMarshClick = async (marsh) => {
@@ -418,6 +442,39 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
           style={{ display: "none" }}
           onChange={handleFileChange}
         />
+        {showSpoilerToggle && (
+          <div className="spoiler-toggle-modal">
+            {imagePreviewUrl && (
+              <div style={{ position: 'relative', marginBottom: 16, maxWidth: 260 }}>
+                <img
+                  src={imagePreviewUrl}
+                  alt="Preview"
+                  className={spoilerChecked ? "message-image spoiler-blur" : "message-image"}
+                  style={{ borderRadius: 14, width: '100%' }}
+                />
+                {spoilerChecked && (
+                  <div className="spoiler-overlay" style={{ zIndex: 2 }}>
+                    <span>This image will be sent as a spoiler</span>
+                  </div>
+                )}
+              </div>
+            )}
+            <label className="spoiler-checkbox-label">
+              <input
+                type="checkbox"
+                checked={spoilerChecked}
+                onChange={e => setSpoilerChecked(e.target.checked)}
+              />
+              Mark image as spoiler
+            </label>
+            <button type="button" className="spoiler-send-btn" onClick={handleSendImageWithSpoiler}>
+              Send Image
+            </button>
+            <button type="button" className="spoiler-cancel-btn" onClick={() => { setShowSpoilerToggle(false); setSpoilerChecked(false); fileRef.current.value = ""; fileRef.current.fileToSend = null; setImagePreviewUrl(""); }}>
+              Cancel
+            </button>
+          </div>
+        )}
 
         <div className="icon-group" style={{ display: "flex", alignItems: "center" }}>
           <button className="icon-btn send-btn" type="submit">
@@ -536,6 +593,7 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
 ========================= */
 const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalChat }) => {
   const isSent = message.senderId === user.uid;
+  const [showSpoiler, setShowSpoiler] = useState(message.spoiler ? true : false);
 
   const senderProfile = userProfiles?.[message.senderId];
   const senderName = safeName(senderProfile);
@@ -559,24 +617,40 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
       <div className={`message-bubble ${message.audioUrl ? "audio-message-bubble" : ""}`}>
         <span className="msg-name">{isSent ? user.displayName || "You" : senderName}</span>
 
-        {message.imageUrl && (
+        {message.imageUrl && message.spoiler ? (
+          <div className="spoiler-image-wrapper">
+            <img
+              src={message.imageUrl}
+              alt="Spoiler"
+              className={showSpoiler ? "message-image spoiler-blur" : "message-image"}
+            />
+            {showSpoiler && (
+              <div className="spoiler-overlay">
+                <span>This image is marked as a spoiler</span>
+                <button className="spoiler-reveal-btn" onClick={() => setShowSpoiler(false)}>
+                  Reveal
+                </button>
+              </div>
+            )}
+          </div>
+        ) : message.imageUrl ? (
           <img
             src={message.imageUrl}
             alt="Sent"
             className="message-image"
           />
-        )}
+        ) : null}
 
-          {message.audioUrl && (
-            <div className="message-audio big-audio-bubble">
-              <audio
-                controls
-                preload="metadata"
-                className="voice-player"
-                src={message.audioUrl}
-              />
-            </div>
-          )}
+        {message.audioUrl && (
+          <div className="message-audio big-audio-bubble">
+            <audio
+              controls
+              preload="metadata"
+              className="voice-player"
+              src={message.audioUrl}
+            />
+          </div>
+        )}
 
         {message.emoji && (
           <div className="message-emoji">{message.emoji}</div>
