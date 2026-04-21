@@ -1,3 +1,214 @@
+/* Inline style replacements for MessageInput */
+.recording-notification {
+  color: #ff5252;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.marsh-btn-img {
+  width: 24px;
+  height: 24px;
+}
+.spoiler-preview-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+  max-width: 260px;
+}
+.voice-btn {
+  margin-left: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eee;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 4px #aaa;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.voice-btn.recording {
+  background: #ff5252;
+  box-shadow: 0 0 8px #ff5252;
+}
+/* Spoiler image styles */
+.spoiler-image-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.spoiler-blur {
+  filter: blur(18px) grayscale(0.5) brightness(0.8);
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.2s;
+}
+.spoiler-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border-radius: 14px;
+  z-index: 2;
+}
+.spoiler-reveal-btn {
+  margin-top: 10px;
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #e57373;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+.spoiler-reveal-btn:hover {
+  background: #b23c3c;
+}
+.spoiler-toggle-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff8f3;
+  border: 2px solid #e57373;
+  border-radius: 16px;
+  padding: 28px 32px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.spoiler-checkbox-label {
+  font-size: 1.1rem;
+  color: #a12f2f;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.spoiler-send-btn, .spoiler-cancel-btn {
+  margin: 6px 0 0 0;
+  padding: 7px 18px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.spoiler-send-btn {
+  background: #e57373;
+  color: #fff;
+  margin-right: 8px;
+}
+.spoiler-send-btn:hover {
+  background: #b23c3c;
+}
+.spoiler-cancel-btn {
+  background: #eee;
+  color: #a12f2f;
+}
+.spoiler-cancel-btn:hover {
+  background: #e57373;
+  color: #fff;
+}
+/* Blur effect for 18+ block */
+.blur-on-18plus {
+  filter: blur(6px) grayscale(0.2) brightness(0.95);
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.2s;
+}
+/* 18+ Group Chat Minor Block Overlay */
+.modal-18plus-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-18plus-warning-box {
+  background: #fff8f3;
+  color: #a12f2f;
+  border: 2px solid #e57373;
+  border-radius: 16px;
+  padding: 32px 36px;
+  max-width: 350px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.modal-18plus-warning-box h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.5rem;
+  color: #e57373;
+}
+.modal-18plus-warning-box p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #a12f2f;
+}
+/* 18+ Group Chat Option */
+.modal-18plus-option {
+  display: flex;
+  align-items: center;
+  margin: 0 0 18px 0;
+  padding: 0 0 0 0;
+}
+
+.modal-18plus-top {
+  margin-bottom: 18px;
+  margin-top: 0;
+  justify-content: flex-start;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  cursor: pointer;
+  gap: 8px;
+  color: var(--text-main, #222);
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: #e57373;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  cursor: not-allowed;
+}
+
+.custom-checkmark {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e57373;
+  border-radius: 4px;
+  background: #fff;
+  color: #e57373;
+  text-align: center;
+  line-height: 16px;
+  font-size: 14px;
+  margin-right: 6px;
+  font-weight: bold;
+  pointer-events: none;
+  opacity: 0.7;
+}
 /* Overall Container*/
 .messages-container {
   display: flex;

@@ -76,19 +76,19 @@ function handleUnreadSnapshot(friend, setUnreadCounts) {
   };
 }
 
+
 const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createError }) => {
+  const { userProfile } = useAuth();
   const [groupName, setGroupName] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [selectedFriendIds, setSelectedFriendIds] = useState([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [is18Plus, setIs18Plus] = useState(false);
+  const [show18PlusPrompt, setShow18PlusPrompt] = useState(false);
 
   const filteredFriends = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
-
-    if (!normalizedSearch) {
-      return friends;
-    }
-
+    if (!normalizedSearch) return friends;
     return friends.filter((friend) => friend.name.toLowerCase().includes(normalizedSearch));
   }, [friends, searchValue]);
 
@@ -105,22 +105,36 @@ const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createEr
 
   const handleCreateClick = async () => {
     setHasSubmitted(true);
-
-    if (!canCreate) {
-      return;
-    }
-
+    if (!canCreate) return;
     const created = await onCreate({
       name: trimmedGroupName,
       memberIds: selectedFriendIds,
+      is18Plus,
     });
-
     if (created) {
       setGroupName("");
       setSearchValue("");
       setSelectedFriendIds([]);
+      setIs18Plus(false);
       setHasSubmitted(false);
     }
+  };
+
+  const handle18PlusToggle = (e) => {
+    if (!is18Plus && e.target.checked) {
+      setShow18PlusPrompt(true);
+    } else {
+      setIs18Plus(false);
+    }
+  };
+
+  const confirm18Plus = () => {
+    setIs18Plus(true);
+    setShow18PlusPrompt(false);
+  };
+  const cancel18Plus = () => {
+    setIs18Plus(false);
+    setShow18PlusPrompt(false);
   };
 
   return (
@@ -141,7 +155,21 @@ const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createEr
           </button>
         </div>
 
+
         <div className="group-chat-modal-body">
+          {/* 18+ Group Chat Option (only for 18+ users) - moved to top */}
+          {userProfile?.isOver18 && (
+            <div className="modal-18plus-option modal-18plus-top">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={is18Plus}
+                  onChange={handle18PlusToggle}
+                />
+                Create 18+ groupchat
+              </label>
+            </div>
+          )}
           <label className="group-chat-modal-label" htmlFor="group-chat-name">
             Group Name
           </label>
@@ -177,7 +205,6 @@ const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createEr
             {filteredFriends.length > 0 ? (
               filteredFriends.map((friend) => {
                 const isSelected = selectedFriendIds.includes(friend.id);
-
                 return (
                   <label
                     key={friend.id}
@@ -217,6 +244,22 @@ const CreateGroupChatModal = ({ friends, onClose, onCreate, isCreating, createEr
             {isCreating ? "Creating..." : "Create Group Chat"}
           </button>
         </div>
+
+        {/* 18+ Prompt Dialog */}
+        {show18PlusPrompt && (
+          <div className="modal-18plus-warning-overlay">
+            <div className="modal-18plus-warning-box">
+              <h3>18+ Group Chat</h3>
+              <p>
+                You are designating this group chat for mature content. Anyone under the age of 18 will be removed upon attempting to open the chat. Are you sure you want to enable 18+ mode?
+              </p>
+              <div className="modal-18plus-warning-actions">
+                <button onClick={confirm18Plus} className="confirm-btn">Yes, Enable 18+ Mode</button>
+                <button onClick={cancel18Plus} className="cancel-btn">Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
       </dialog>
     </div>
   );
@@ -231,6 +274,9 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [recordingNotification, setRecordingNotification] = useState("");
+  const [showSpoilerToggle, setShowSpoilerToggle] = useState(false);
+  const [spoilerChecked, setSpoilerChecked] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const { uploadImage } = useImageUpload();
   const fileRef = useRef(null);
   const textareaRef = useRef(null);
@@ -286,17 +332,38 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
 
     if (!file.type?.startsWith("image/")) {
       e.target.value = "";
+      setShowSpoilerToggle(false);
+      setImagePreviewUrl("");
       return;
     }
 
+    setShowSpoilerToggle(true);
+    // Show preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreviewUrl(reader.result);
+    };
+    reader.readAsDataURL(file);
+    // Store file in ref for sending after toggle
+    fileRef.current.fileToSend = file;
+  };
+
+  const handleSendImageWithSpoiler = async () => {
+    const file = fileRef.current.fileToSend;
+    if (!file) return;
     if (typeof onSendImage !== "function") {
       console.error("onSendImage is not a function");
-      e.target.value = "";
+      setShowSpoilerToggle(false);
+      fileRef.current.value = "";
+      setImagePreviewUrl("");
       return;
     }
-
-    await onSendImage(file);
-    e.target.value = "";
+    await onSendImage(file, spoilerChecked);
+    setShowSpoilerToggle(false);
+    setSpoilerChecked(false);
+    fileRef.current.value = "";
+    fileRef.current.fileToSend = null;
+    setImagePreviewUrl("");
   };
 
   const handleMarshClick = async (marsh) => {
@@ -326,9 +393,7 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
   return (
     <div className="message-input-wrapper">
       {recordingNotification && (
-        <div style={{ color: "#ff5252", marginBottom: 8, fontWeight: 600 }}>
-          {recordingNotification}
-        </div>
+        <div className="recording-notification">{recordingNotification}</div>
       )}
 
       {showMarshPicker && (
@@ -347,14 +412,14 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
         </div>
       )}
 
-      <form className="chat-input" onSubmit={handleSend} style={{ display: "flex", alignItems: "center" }}>
+      <form className="chat-input" onSubmit={handleSend}>
         <button
           type="button"
           className="icon-btn marsh-btn"
           onClick={() => setShowMarshPicker((prev) => !prev)}
           aria-label="Open marsh images"
         >
-          <img src={HappyMarsh} alt="Marsh" style={{ width: 24, height: 24 }} />
+          <img src={HappyMarsh} alt="Marsh" className="marsh-btn-img" />
         </button>
 
         <textarea
@@ -375,28 +440,47 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
           style={{ display: "none" }}
           onChange={handleFileChange}
         />
+        {showSpoilerToggle && (
+          <div className="spoiler-toggle-modal">
+            {imagePreviewUrl && (
+              <div className="spoiler-preview-wrapper">
+                <img
+                  src={imagePreviewUrl}
+                  alt="Preview"
+                  className={spoilerChecked ? "message-image spoiler-blur" : "message-image"}
+                />
+                {spoilerChecked && (
+                  <div className="spoiler-overlay">
+                    <span>This image will be sent as a spoiler</span>
+                  </div>
+                )}
+              </div>
+            )}
+            <label className="spoiler-checkbox-label">
+              <input
+                type="checkbox"
+                checked={spoilerChecked}
+                onChange={e => setSpoilerChecked(e.target.checked)}
+              />
+              Mark image as spoiler
+            </label>
+            <button type="button" className="spoiler-send-btn" onClick={handleSendImageWithSpoiler}>
+              Send Image
+            </button>
+            <button type="button" className="spoiler-cancel-btn" onClick={() => { setShowSpoilerToggle(false); setSpoilerChecked(false); fileRef.current.value = ""; fileRef.current.fileToSend = null; setImagePreviewUrl(""); }}>
+              Cancel
+            </button>
+          </div>
+        )}
 
-        <div className="icon-group" style={{ display: "flex", alignItems: "center" }}>
+        <div className="icon-group">
           <button className="icon-btn send-btn" type="submit">
             <img src={SEND_ICON} alt="Send" />
           </button>
 
           <button
             type="button"
-            className="voice-btn"
-            style={{
-              marginLeft: "8px",
-              width: "40px",
-              height: "40px",
-              borderRadius: "50%",
-              background: isRecording ? "#ff5252" : "#eee",
-              border: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: isRecording ? "0 0 8px #ff5252" : "0 0 4px #aaa",
-              cursor: "pointer",
-            }}
+            className={isRecording ? "voice-btn recording" : "voice-btn"}
             aria-label="Record voice message"
             onClick={async () => {
               if (!isRecording) {
@@ -493,6 +577,12 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
 ========================= */
 const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalChat }) => {
   const isSent = message.senderId === user.uid;
+  const [showSpoiler, setShowSpoiler] = useState(() => message.spoiler ? true : false);
+
+  useEffect(() => {
+    // Reset spoiler state if message changes (e.g., new message sent)
+    setShowSpoiler(message.spoiler ? true : false);
+  }, [message.imageUrl, message.spoiler]);
 
   const senderProfile = userProfiles?.[message.senderId];
   const senderName = safeName(senderProfile);
@@ -516,24 +606,40 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
       <div className={`message-bubble ${message.audioUrl ? "audio-message-bubble" : ""}`}>
         <span className="msg-name">{isSent ? user.displayName || "You" : senderName}</span>
 
-        {message.imageUrl && (
+        {message.imageUrl && message.spoiler ? (
+          <div className="spoiler-image-wrapper">
+            <img
+              src={message.imageUrl}
+              alt="Spoiler"
+              className={showSpoiler ? "message-image spoiler-blur" : "message-image"}
+            />
+            {showSpoiler && (
+              <div className="spoiler-overlay">
+                <span>This image is marked as a spoiler</span>
+                <button className="spoiler-reveal-btn" onClick={() => setShowSpoiler(false)}>
+                  Reveal
+                </button>
+              </div>
+            )}
+          </div>
+        ) : message.imageUrl ? (
           <img
             src={message.imageUrl}
             alt="Sent"
             className="message-image"
           />
-        )}
+        ) : null}
 
-          {message.audioUrl && (
-            <div className="message-audio big-audio-bubble">
-              <audio
-                controls
-                preload="metadata"
-                className="voice-player"
-                src={message.audioUrl}
-              />
-            </div>
-          )}
+        {message.audioUrl && (
+          <div className="message-audio big-audio-bubble">
+            <audio
+              controls
+              preload="metadata"
+              className="voice-player"
+              src={message.audioUrl}
+            />
+          </div>
+        )}
 
         {message.emoji && (
           <div className="message-emoji">{message.emoji}</div>
@@ -647,22 +753,18 @@ export default function Messages() {
     }
   }, [selectedFriend, blockedIds]);
 
-  const handleCreateGroupChat = async ({ name, memberIds }) => {
+  const handleCreateGroupChat = async ({ name, memberIds, is18Plus }) => {
     if (!user) return false;
-
     if (!name.trim()) {
       setGroupCreateError("A group name is required.");
       return false;
     }
-
     if (memberIds.length < 2) {
       setGroupCreateError("Choose at least two friends for this group chat.");
       return false;
     }
-
     setIsCreatingGroup(true);
     setGroupCreateError("");
-
     try {
       const uniqueMemberIds = Array.from(new Set([user.uid, ...memberIds]));
       const docRef = await addDoc(collection(firestore, "groupChats"), {
@@ -672,14 +774,15 @@ export default function Messages() {
         createdBy: user.uid,
         avatar: DEFAULT_GROUP_ICON,
         type: CHAT_TYPES.GROUP,
+        is18Plus: !!is18Plus,
       });
-
       setSelectedFriend({
         id: docRef.id,
         type: CHAT_TYPES.GROUP,
         name: name.trim(),
         memberIds: uniqueMemberIds,
         avatar: DEFAULT_GROUP_ICON,
+        is18Plus: !!is18Plus,
       });
       setShowCreateGroupModal(false);
       return true;
@@ -760,9 +863,26 @@ export default function Messages() {
     });
   }
 
+  const [hasSeen18PlusWarning, setHasSeen18PlusWarning] = useState({});
+  const [showMinor18PlusBlock, setShowMinor18PlusBlock] = useState(false);
+  const [pendingRemoveGroupId, setPendingRemoveGroupId] = useState(null);
+
+  const removeUserFromGroup = async (groupId) => {
+    if (!user) return;
+    try {
+      const groupRef = doc(firestore, "groupChats", groupId);
+      await updateDoc(groupRef, {
+        memberIds: groupChats.find(g => g.id === groupId)?.memberIds?.filter(id => id !== user.uid) || [],
+      });
+    } catch (err) {
+      console.error("Failed to remove user from 18+ group chat", err);
+    }
+  };
+
   const ChatView = ({ friend }) => {
     const isGlobalChat = friend.id === CHAT_TYPES.GLOBAL || friend.type === CHAT_TYPES.GLOBAL;
     const isGroupChat = friend.type === CHAT_TYPES.GROUP;
+    const is18PlusGroup = isGroupChat && friend.is18Plus;
     const canDeleteGroup = isGroupChat && friend.createdBy === user?.uid;
     let chatType = CHAT_TYPES.DIRECT;
     if (isGlobalChat) {
@@ -786,7 +906,7 @@ export default function Messages() {
     const { uploadImage, isUploading, error } = useImageUpload();
     const memberCount = isGroupChat ? Math.max((friend.memberIds?.length || 1) - 1, 0) : 0;
 
-    const sendImageOnly = async (file) => {
+    const sendImageOnly = async (file, spoiler = false) => {
       if (!file || !user || !friend?.id) return;
       if (!file.type?.startsWith("image/")) return;
 
@@ -802,6 +922,7 @@ export default function Messages() {
         await addDoc(messagesRef, {
           text: "",
           imageUrl,
+          spoiler: !!spoiler,
           timestamp: serverTimestamp(),
           senderId: user.uid,
           displayName: userProfile?.name || user?.displayName || "Anonymous",
@@ -840,6 +961,46 @@ export default function Messages() {
 
     const messagesEndRef = useRef(null);
 
+
+
+    // 18+ group chat entry logic
+    useEffect(() => {
+      if (!is18PlusGroup) return;
+      if (!userProfile) return;
+
+      // Under 18: always block and show overlay, then remove
+      if (!userProfile.isOver18) {
+        setShowMinor18PlusBlock(true);
+        setPendingRemoveGroupId(friend.id);
+        return;
+      }
+
+      // Over 18: only show warning once per group
+      if (hasSeen18PlusWarning[friend.id]) return;
+      const proceed = window.confirm("This group chat is designated for mature content (18+). Do you wish to proceed? If you decline, you will be removed from this chat.");
+      if (proceed) {
+        setHasSeen18PlusWarning((prev) => ({ ...prev, [friend.id]: true }));
+      } else {
+        removeUserFromGroup(friend.id);
+        setSelectedFriend(null);
+        setHasSeen18PlusWarning((prev) => ({ ...prev, [friend.id]: true }));
+      }
+    }, [is18PlusGroup, userProfile, friend.id]);
+
+    // Remove minor from group after showing overlay
+    useEffect(() => {
+      if (showMinor18PlusBlock && pendingRemoveGroupId) {
+        const timer = setTimeout(() => {
+          removeUserFromGroup(pendingRemoveGroupId);
+          setSelectedFriend(null);
+          setHasSeen18PlusWarning((prev) => ({ ...prev, [pendingRemoveGroupId]: true }));
+          setShowMinor18PlusBlock(false);
+          setPendingRemoveGroupId(null);
+        }, 2500);
+        return () => clearTimeout(timer);
+      }
+    }, [showMinor18PlusBlock, pendingRemoveGroupId]);
+
     useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
       markUnreadMessages(messages, user, markMessageAsRead);
@@ -847,7 +1008,15 @@ export default function Messages() {
 
     return (
       <>
-        <div className="chat-header chat-header-row">
+        {showMinor18PlusBlock && (
+          <div className="modal-18plus-warning-overlay">
+            <div className="modal-18plus-warning-box">
+              <h3>18+ Group Chat</h3>
+              <p>This group chat is designated for mature content. You are under 18 and will be removed from this chat.</p>
+            </div>
+          </div>
+        )}
+        <div className={showMinor18PlusBlock ? "chat-header chat-header-row blur-on-18plus" : "chat-header chat-header-row"}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
               src={friend.avatar}
@@ -873,7 +1042,7 @@ export default function Messages() {
           )}
         </div>
 
-        <div className="chat-body">
+        <div className={showMinor18PlusBlock ? "chat-body blur-on-18plus" : "chat-body"}>
           {messagesLoading && (!messages || messages.length === 0) ? (
             <div>Loading messages...</div>
           ) : (
@@ -896,7 +1065,7 @@ export default function Messages() {
         {error && <div style={{ color: "brown", padding: "6px 0" }}>{error}</div>}
         {isUploading && <div style={{ padding: "6px 0" }}>Uploading image...</div>}
 
-        <div className="input-box">
+        <div className={showMinor18PlusBlock ? "input-box blur-on-18plus" : "input-box"}>
           <MessageInput
             onSendMessage={sendMessage}
             onSendImage={sendImageOnly}
