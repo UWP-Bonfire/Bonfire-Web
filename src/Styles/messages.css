@@ -909,7 +909,7 @@
   max-height: 180px;
   overflow-y: auto;
 }
-
+/* Group Chat Sidebar (DM List) */
 .group-chat-sidebar-copy {
   display: flex;
   flex-direction: column;
