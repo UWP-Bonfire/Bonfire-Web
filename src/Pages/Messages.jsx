@@ -274,6 +274,9 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [recordingNotification, setRecordingNotification] = useState("");
+  const [showSpoilerToggle, setShowSpoilerToggle] = useState(false);
+  const [spoilerChecked, setSpoilerChecked] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const { uploadImage } = useImageUpload();
   const fileRef = useRef(null);
   const textareaRef = useRef(null);
@@ -329,17 +332,38 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
 
     if (!file.type?.startsWith("image/")) {
       e.target.value = "";
+      setShowSpoilerToggle(false);
+      setImagePreviewUrl("");
       return;
     }
 
+    setShowSpoilerToggle(true);
+    // Show preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreviewUrl(reader.result);
+    };
+    reader.readAsDataURL(file);
+    // Store file in ref for sending after toggle
+    fileRef.current.fileToSend = file;
+  };
+
+  const handleSendImageWithSpoiler = async () => {
+    const file = fileRef.current.fileToSend;
+    if (!file) return;
     if (typeof onSendImage !== "function") {
       console.error("onSendImage is not a function");
-      e.target.value = "";
+      setShowSpoilerToggle(false);
+      fileRef.current.value = "";
+      setImagePreviewUrl("");
       return;
     }
-
-    await onSendImage(file);
-    e.target.value = "";
+    await onSendImage(file, spoilerChecked);
+    setShowSpoilerToggle(false);
+    setSpoilerChecked(false);
+    fileRef.current.value = "";
+    fileRef.current.fileToSend = null;
+    setImagePreviewUrl("");
   };
 
   const handleMarshClick = async (marsh) => {
@@ -369,9 +393,7 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
   return (
     <div className="message-input-wrapper">
       {recordingNotification && (
-        <div style={{ color: "#ff5252", marginBottom: 8, fontWeight: 600 }}>
-          {recordingNotification}
-        </div>
+        <div className="recording-notification">{recordingNotification}</div>
       )}
 
       {showMarshPicker && (
@@ -390,14 +412,14 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
         </div>
       )}
 
-      <form className="chat-input" onSubmit={handleSend} style={{ display: "flex", alignItems: "center" }}>
+      <form className="chat-input" onSubmit={handleSend}>
         <button
           type="button"
           className="icon-btn marsh-btn"
           onClick={() => setShowMarshPicker((prev) => !prev)}
           aria-label="Open marsh images"
         >
-          <img src={HappyMarsh} alt="Marsh" style={{ width: 24, height: 24 }} />
+          <img src={HappyMarsh} alt="Marsh" className="marsh-btn-img" />
         </button>
 
         <textarea
@@ -418,28 +440,47 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
           style={{ display: "none" }}
           onChange={handleFileChange}
         />
+        {showSpoilerToggle && (
+          <div className="spoiler-toggle-modal">
+            {imagePreviewUrl && (
+              <div className="spoiler-preview-wrapper">
+                <img
+                  src={imagePreviewUrl}
+                  alt="Preview"
+                  className={spoilerChecked ? "message-image spoiler-blur" : "message-image"}
+                />
+                {spoilerChecked && (
+                  <div className="spoiler-overlay">
+                    <span>This image will be sent as a spoiler</span>
+                  </div>
+                )}
+              </div>
+            )}
+            <label className="spoiler-checkbox-label">
+              <input
+                type="checkbox"
+                checked={spoilerChecked}
+                onChange={e => setSpoilerChecked(e.target.checked)}
+              />
+              Mark image as spoiler
+            </label>
+            <button type="button" className="spoiler-send-btn" onClick={handleSendImageWithSpoiler}>
+              Send Image
+            </button>
+            <button type="button" className="spoiler-cancel-btn" onClick={() => { setShowSpoilerToggle(false); setSpoilerChecked(false); fileRef.current.value = ""; fileRef.current.fileToSend = null; setImagePreviewUrl(""); }}>
+              Cancel
+            </button>
+          </div>
+        )}
 
-        <div className="icon-group" style={{ display: "flex", alignItems: "center" }}>
+        <div className="icon-group">
           <button className="icon-btn send-btn" type="submit">
             <img src={SEND_ICON} alt="Send" />
           </button>
 
           <button
             type="button"
-            className="voice-btn"
-            style={{
-              marginLeft: "8px",
-              width: "40px",
-              height: "40px",
-              borderRadius: "50%",
-              background: isRecording ? "#ff5252" : "#eee",
-              border: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: isRecording ? "0 0 8px #ff5252" : "0 0 4px #aaa",
-              cursor: "pointer",
-            }}
+            className={isRecording ? "voice-btn recording" : "voice-btn"}
             aria-label="Record voice message"
             onClick={async () => {
               if (!isRecording) {
@@ -536,6 +577,12 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
 ========================= */
 const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalChat }) => {
   const isSent = message.senderId === user.uid;
+  const [showSpoiler, setShowSpoiler] = useState(() => message.spoiler ? true : false);
+
+  useEffect(() => {
+    // Reset spoiler state if message changes (e.g., new message sent)
+    setShowSpoiler(message.spoiler ? true : false);
+  }, [message.imageUrl, message.spoiler]);
 
   const senderProfile = userProfiles?.[message.senderId];
   const senderName = safeName(senderProfile);
@@ -559,24 +606,40 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
       <div className={`message-bubble ${message.audioUrl ? "audio-message-bubble" : ""}`}>
         <span className="msg-name">{isSent ? user.displayName || "You" : senderName}</span>
 
-        {message.imageUrl && (
+        {message.imageUrl && message.spoiler ? (
+          <div className="spoiler-image-wrapper">
+            <img
+              src={message.imageUrl}
+              alt="Spoiler"
+              className={showSpoiler ? "message-image spoiler-blur" : "message-image"}
+            />
+            {showSpoiler && (
+              <div className="spoiler-overlay">
+                <span>This image is marked as a spoiler</span>
+                <button className="spoiler-reveal-btn" onClick={() => setShowSpoiler(false)}>
+                  Reveal
+                </button>
+              </div>
+            )}
+          </div>
+        ) : message.imageUrl ? (
           <img
             src={message.imageUrl}
             alt="Sent"
             className="message-image"
           />
-        )}
+        ) : null}
 
-          {message.audioUrl && (
-            <div className="message-audio big-audio-bubble">
-              <audio
-                controls
-                preload="metadata"
-                className="voice-player"
-                src={message.audioUrl}
-              />
-            </div>
-          )}
+        {message.audioUrl && (
+          <div className="message-audio big-audio-bubble">
+            <audio
+              controls
+              preload="metadata"
+              className="voice-player"
+              src={message.audioUrl}
+            />
+          </div>
+        )}
 
         {message.emoji && (
           <div className="message-emoji">{message.emoji}</div>
@@ -843,7 +906,7 @@ export default function Messages() {
     const { uploadImage, isUploading, error } = useImageUpload();
     const memberCount = isGroupChat ? Math.max((friend.memberIds?.length || 1) - 1, 0) : 0;
 
-    const sendImageOnly = async (file) => {
+    const sendImageOnly = async (file, spoiler = false) => {
       if (!file || !user || !friend?.id) return;
       if (!file.type?.startsWith("image/")) return;
 
@@ -859,6 +922,7 @@ export default function Messages() {
         await addDoc(messagesRef, {
           text: "",
           imageUrl,
+          spoiler: !!spoiler,
           timestamp: serverTimestamp(),
           senderId: user.uid,
           displayName: userProfile?.name || user?.displayName || "Anonymous",
