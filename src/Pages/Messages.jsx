@@ -966,13 +966,15 @@ export default function Messages() {
     const [isPinned, setIsPinned] = useState(false);
 
     useEffect(() => {
-      if (!user || !friend?.id || isGlobalChat || isGroupChat) {
+      if (!user || !friend?.id || isGlobalChat) {
         setIsPinned(false);
         return;
       }
 
-      const chatId = getDirectChatId(user.uid, friend.id);
-      const chatRef = doc(firestore, "chats", chatId);
+      const chatRef = isGroupChat
+        ? doc(firestore, "groupChats", friend.id)
+        : doc(firestore, "chats", getDirectChatId(user.uid, friend.id));
+
       const unsubscribe = onSnapshot(chatRef, (chatSnap) => {
         setIsPinned(chatSnap.exists() && chatSnap.data()?.pinned === true);
       });
@@ -981,16 +983,17 @@ export default function Messages() {
     }, [user, friend?.id, isGroupChat, isGlobalChat]);
 
     const togglePinnedChat = async () => {
-      if (!user || !friend?.id || isGlobalChat || isGroupChat) return;
+      if (!user || !friend?.id || isGlobalChat) return;
 
-      const chatId = getDirectChatId(user.uid, friend.id);
-      const chatRef = doc(firestore, "chats", chatId);
+      const chatRef = isGroupChat
+        ? doc(firestore, "groupChats", friend.id)
+        : doc(firestore, "chats", getDirectChatId(user.uid, friend.id));
 
       try {
         const chatSnap = await getDoc(chatRef);
         const nextPinned = !isPinned;
 
-        if (!chatSnap.exists()) {
+        if (!chatSnap.exists() && !isGroupChat) {
           await setDoc(
             chatRef,
             {
@@ -1077,7 +1080,7 @@ export default function Messages() {
             </div>
           </div>
 
-          {!isGroupChat && !isGlobalChat && (
+          {!isGlobalChat && (
             <button
               type="button"
               className={`favorite-chat-btn ${isPinned ? "pinned" : ""}`}
