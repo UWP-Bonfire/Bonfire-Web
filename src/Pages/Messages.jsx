@@ -17,6 +17,7 @@ import { useAuth } from "./hooks/useAuth";
 import useBlockUser from "./hooks/useBlockUser";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
+import { useFavoritedChats } from "./hooks/useFavoritedChats";
 import "../Styles/messages.css";
 import useImageUpload from "./hooks/useImageUpload.js";
 import {
@@ -31,8 +32,6 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  arrayUnion,
-  arrayRemove,
   serverTimestamp,
 } from "firebase/firestore";
 import { firestore } from "../firebase.js";
@@ -690,6 +689,8 @@ export default function Messages() {
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
   const [groupDeleteError, setGroupDeleteError] = useState("");
 
+  const { favoritedChats, toggleFavorite } = useFavoritedChats();
+
   const blockedIds = useMemo(() => new Set((blockedUsers || []).map((u) => u.id)), [blockedUsers]);
 
   const normalizedFriends = useMemo(
@@ -965,38 +966,12 @@ export default function Messages() {
     };
 
     const messagesEndRef = useRef(null);
-    const [isPinned, setIsPinned] = useState(false);
 
     const chatKey = isGroupChat ? friend.id : getDirectChatId(user.uid, friend.id);
 
-    useEffect(() => {
-      if (!user || !friend?.id || isGlobalChat) {
-        setIsPinned(false);
-        return;
-      }
+    const isPinned = favoritedChats.includes(chatKey);
 
-      const userRef = doc(firestore, "users", user.uid);
-      const unsubscribe = onSnapshot(userRef, (userSnap) => {
-        const favoritedChats = userSnap.data()?.favoritedChats || [];
-        setIsPinned(favoritedChats.includes(chatKey));
-      });
-
-      return () => unsubscribe();
-    }, [user, friend?.id, isGroupChat, isGlobalChat, chatKey]);
-
-    const togglePinnedChat = async () => {
-      if (!user || !friend?.id || isGlobalChat) return;
-
-      const userRef = doc(firestore, "users", user.uid);
-
-      try {
-        await updateDoc(userRef, {
-          favoritedChats: isPinned ? arrayRemove(chatKey) : arrayUnion(chatKey)
-        });
-      } catch (err) {
-        console.error("Error toggling favorite chat:", err);
-      }
-    };
+    const togglePinnedChat = () => toggleFavorite(chatKey);
 
 
 
