@@ -556,6 +556,10 @@
   font-size: 14px;
 }
 
+.dm-list {
+  overflow-y: auto;
+}
+
 .unread-count {
   background: var(--accent-1);
   color: var(--text-main);
