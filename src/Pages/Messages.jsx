@@ -28,6 +28,9 @@ import {
   getDocs,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
+  updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import { firestore } from "../firebase.js";
@@ -960,6 +963,50 @@ export default function Messages() {
     };
 
     const messagesEndRef = useRef(null);
+    const [isPinned, setIsPinned] = useState(false);
+
+    useEffect(() => {
+      if (!user || !friend?.id || isGlobalChat || isGroupChat) {
+        setIsPinned(false);
+        return;
+      }
+
+      const chatId = getDirectChatId(user.uid, friend.id);
+      const chatRef = doc(firestore, "chats", chatId);
+      const unsubscribe = onSnapshot(chatRef, (chatSnap) => {
+        setIsPinned(chatSnap.exists() && chatSnap.data()?.pinned === true);
+      });
+
+      return () => unsubscribe();
+    }, [user, friend?.id, isGroupChat, isGlobalChat]);
+
+    const togglePinnedChat = async () => {
+      if (!user || !friend?.id || isGlobalChat || isGroupChat) return;
+
+      const chatId = getDirectChatId(user.uid, friend.id);
+      const chatRef = doc(firestore, "chats", chatId);
+
+      try {
+        const chatSnap = await getDoc(chatRef);
+        const nextPinned = !isPinned;
+
+        if (!chatSnap.exists()) {
+          await setDoc(
+            chatRef,
+            {
+              users: [user.uid, friend.id],
+              consecutiveUnread: { [user.uid]: 0, [friend.id]: 0 },
+              pinned: nextPinned,
+            },
+            { merge: true }
+          );
+        } else {
+          await updateDoc(chatRef, { pinned: nextPinned });
+        }
+      } catch (err) {
+        console.error("Error toggling favorite chat:", err);
+      }
+    };
 
 
 
@@ -1029,6 +1076,17 @@ export default function Messages() {
               {isGroupChat && <small>{memberCount} friend{memberCount === 1 ? "" : "s"} added</small>}
             </div>
           </div>
+
+          {!isGroupChat && !isGlobalChat && (
+            <button
+              type="button"
+              className={`favorite-chat-btn ${isPinned ? "pinned" : ""}`}
+              onClick={togglePinnedChat}
+              aria-label={isPinned ? "Unfavorite chat" : "Favorite chat"}
+            >
+              {isPinned ? "★ Favorited" : "☆ Favorite"}
+            </button>
+          )}
 
           {canDeleteGroup && (
             <button

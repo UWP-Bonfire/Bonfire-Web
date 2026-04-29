@@ -949,6 +949,33 @@
   transition: transform 0.2s, opacity 0.2s;
 }
 
+.favorite-chat-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #2f4f8f;
+  color: #fffbf2;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s, background-color 0.2s;
+  margin-right: 10px;
+}
+
+.favorite-chat-btn:hover {
+  transform: translateY(-1px);
+  background: #1f3c6b;
+}
+
+.favorite-chat-btn.pinned {
+  background: #f0b429;
+  color: #1f1f1f;
+}
+
+.favorite-chat-btn.pinned:hover {
+  background: #d99a15;
+}
+
 .delete-group-btn:hover {
   transform: translateY(-1px);
 }
