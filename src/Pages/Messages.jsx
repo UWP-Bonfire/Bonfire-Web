@@ -31,6 +31,8 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  arrayUnion,
+  arrayRemove,
   serverTimestamp,
 } from "firebase/firestore";
 import { firestore } from "../firebase.js";
@@ -965,47 +967,32 @@ export default function Messages() {
     const messagesEndRef = useRef(null);
     const [isPinned, setIsPinned] = useState(false);
 
+    const chatKey = isGroupChat ? friend.id : getDirectChatId(user.uid, friend.id);
+
     useEffect(() => {
       if (!user || !friend?.id || isGlobalChat) {
         setIsPinned(false);
         return;
       }
 
-      const chatRef = isGroupChat
-        ? doc(firestore, "groupChats", friend.id)
-        : doc(firestore, "chats", getDirectChatId(user.uid, friend.id));
-
-      const unsubscribe = onSnapshot(chatRef, (chatSnap) => {
-        setIsPinned(chatSnap.exists() && chatSnap.data()?.pinned === true);
+      const userRef = doc(firestore, "users", user.uid);
+      const unsubscribe = onSnapshot(userRef, (userSnap) => {
+        const favoritedChats = userSnap.data()?.favoritedChats || [];
+        setIsPinned(favoritedChats.includes(chatKey));
       });
 
       return () => unsubscribe();
-    }, [user, friend?.id, isGroupChat, isGlobalChat]);
+    }, [user, friend?.id, isGroupChat, isGlobalChat, chatKey]);
 
     const togglePinnedChat = async () => {
       if (!user || !friend?.id || isGlobalChat) return;
 
-      const chatRef = isGroupChat
-        ? doc(firestore, "groupChats", friend.id)
-        : doc(firestore, "chats", getDirectChatId(user.uid, friend.id));
+      const userRef = doc(firestore, "users", user.uid);
 
       try {
-        const chatSnap = await getDoc(chatRef);
-        const nextPinned = !isPinned;
-
-        if (!chatSnap.exists() && !isGroupChat) {
-          await setDoc(
-            chatRef,
-            {
-              users: [user.uid, friend.id],
-              consecutiveUnread: { [user.uid]: 0, [friend.id]: 0 },
-              pinned: nextPinned,
-            },
-            { merge: true }
-          );
-        } else {
-          await updateDoc(chatRef, { pinned: nextPinned });
-        }
+        await updateDoc(userRef, {
+          favoritedChats: isPinned ? arrayRemove(chatKey) : arrayUnion(chatKey)
+        });
       } catch (err) {
         console.error("Error toggling favorite chat:", err);
       }
