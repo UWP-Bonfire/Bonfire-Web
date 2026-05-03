@@ -6,6 +6,13 @@ body {
 
 /* Light mode*/
 :root {
+    /* Button backgrounds */
+    --btn-primary-bg: #c84848;
+    --btn-primary-text: #fff;
+    --btn-primary-hover: #a63a3a;
+    --btn-secondary-bg: #e7c586;
+    --btn-secondary-text: #3c2b23;
+    --btn-secondary-hover: #db976a;
   /* Background Gradient */
   --bg-1: #e7c586;
   --bg-2: #db976a;
@@ -72,7 +79,7 @@ body.dark {
   --bg-2: #2b2438;
   --bg-3: #744d30;
 
-  --text-main: #242424;
+  --text-main: #ffffff;
 
   --card-bg: #37382b;
 

@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Hooks
 import useFriends from "./hooks/useFriends";
 import useFriendRequests from "./hooks/useFriendRequests";
 import { useAuth } from "./hooks/useAuth";
@@ -8,10 +10,12 @@ import useNotifications from "./hooks/useNotifications";
 import useBlockUser from "./hooks/useBlockUser";
 import useChatSettings from "./hooks/useChatSettings";
 
+// Firebase
 import { auth, firestore } from "../firebase";
 import { signOut } from "firebase/auth";
 import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
 
+// Styles & Assets
 import "../Styles/friends.css";
 import BellIcon from "../assets/icons/Bell.png";
 import SettingsIcon from "../assets/icons/Settings.svg";
@@ -20,14 +24,14 @@ import MessageIcon from "../assets/images/message.png";
 
 const DEFAULT_AVATAR = DefaultAvatar;
 
+
 export default function Friends() {
   const navigate = useNavigate();
 
+  // Hooks
   const { friends, loading, error, unfriend, muteUser, unmuteUser } = useFriends();
   const { user, userProfile } = useAuth();
-
   const { requestPermission } = useNotifications();
-
   const {
     requests: friendRequests,
     loading: reqLoading,
@@ -35,54 +39,59 @@ export default function Friends() {
     acceptRequest,
     declineRequest,
   } = useFriendRequests();
-
   const { toggleLimit } = useChatSettings();
   const { blockUser, unblockUser, blockedUsers } = useBlockUser();
 
+  // State
   const [unreadCounts, setUnreadCounts] = useState({});
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeOptionsMenu, setActiveOptionsMenu] = useState(null);
-
   const [chatLimits, setChatLimits] = useState({});
 
+
+  // Request notification permission on mount
   useEffect(() => {
     requestPermission();
   }, [requestPermission]);
 
   // Track per-friend "Limit Notifications" flag from chat doc
+
+  // Track per-friend "Limit Notifications" flag from chat doc
   useEffect(() => {
     if (!user || friends.length === 0) return;
 
-    function setLimitNotifications(friend, snap) {
+    const setLimitNotifications = (friend, snap) => {
       setChatLimits((prev) => ({
         ...prev,
         [friend.id]: snap.data()?.limitNotifications || false,
       }));
-    }
+    };
 
-    function subscribeLimitNotifications(friend) {
-      const chatId = [user.uid, friend.id].sort().join("_");
+    const subscribeLimitNotifications = (friend) => {
+      const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
       const chatRef = doc(firestore, "chats", chatId);
       return onSnapshot(chatRef, (snap) => setLimitNotifications(friend, snap));
-    }
+    };
 
     const unsubscribes = friends.map(subscribeLimitNotifications);
     return () => unsubscribes.forEach((u) => u());
   }, [friends, user]);
 
   // unread message dots in sidebar
+
+  // Track unread message counts per friend
   useEffect(() => {
     if (!user || friends.length === 0) return;
 
-    function setUnreadCount(friend, snapshot) {
+    const setUnreadCount = (friend, snapshot) => {
       setUnreadCounts((prev) => ({
         ...prev,
         [friend.id]: snapshot.size,
       }));
-    }
+    };
 
-    function subscribeUnreadCount(friend) {
-      const chatId = [user.uid, friend.id].sort().join("_");
+    const subscribeUnreadCount = (friend) => {
+      const chatId = [user.uid, friend.id].sort((a, b) => a.localeCompare(b)).join("_");
       const messagesRef = collection(firestore, "chats", chatId, "messages");
       const q = query(
         messagesRef,
@@ -90,25 +99,27 @@ export default function Friends() {
         where("senderId", "==", friend.id)
       );
       return onSnapshot(q, (snapshot) => setUnreadCount(friend, snapshot));
-    }
+    };
 
     const unsubscribes = friends.map(subscribeUnreadCount);
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [friends, user]);
 
+
+  // Handlers
   const handleChatClick = (friendId) => {
     navigate("/messages", { state: { friendId } });
   };
 
   const handleBlockToggle = (friendId) => {
-  const isBlocked = blockedUsers.some(user => user.id === friendId);
-  if (isBlocked) {
-    unblockUser(friendId);
-  } else {
-    blockUser(friendId);
-  }
-  setActiveOptionsMenu(null);
-};
+    const isBlocked = blockedUsers.some(user => user.id === friendId);
+    if (isBlocked) {
+      unblockUser(friendId);
+    } else {
+      blockUser(friendId);
+    }
+    setActiveOptionsMenu(null);
+  };
 
   const handleMuteToggle = (friend) => {
     if (friend.isMuted) {
@@ -140,25 +151,30 @@ export default function Friends() {
     }
   };
 
+
+  // Loading & error states
   if (loading) return <div>Loading friends...</div>;
   if (error) return <div>{error}</div>;
 
-  // hide blocked users
+  // Filter and sort friends (hide blocked, sort by unread count)
   const visibleFriends = friends
-  .filter((f) => !blockedUsers.some(user => user.id === f.id))
-  .sort((a, b) => {
-    // Sort by unread message count (descending)
-    const unreadA = unreadCounts[a.id] || 0;
-    const unreadB = unreadCounts[b.id] || 0;
-    return unreadB - unreadA;
-  });
+    .filter((f) => !blockedUsers.some(user => user.id === f.id))
+    .sort((a, b) => {
+      const unreadA = unreadCounts[a.id] || 0;
+      const unreadB = unreadCounts[b.id] || 0;
+      // Sort by unread count descending, then by name ascending for stability
+      if (unreadB !== unreadA) return unreadB - unreadA;
+      return (a.name || '').localeCompare(b.name || '');
+    });
 
+  // =====================
+  // Render
+  // =====================
   return (
     <div className="container">
       {/* Sidebar */}
       <div className="sidebar">
         <h2>Direct Messages</h2>
-
         <div className="dm-list">
           {visibleFriends.map((friend) => (
             <div className="dm" key={friend.id} onClick={() => handleChatClick(friend.id)}>
@@ -170,12 +186,10 @@ export default function Friends() {
                 />
                 {unreadCounts[friend.id] > 0 && <span className="unread-dot"></span>}
               </div>
-
               <span className="dm-name">{friend.name}</span>
             </div>
           ))}
         </div>
-
         <div className="bottom-section">
           <button
             className="settings-btn"
@@ -185,7 +199,6 @@ export default function Friends() {
           >
             <img src={SettingsIcon} alt="Settings" />
           </button>
-
           <div className="user" onClick={() => navigate("/account")}> 
             <img
               src={userProfile?.avatar || user?.photoURL || "/images/bonfire.png"}
@@ -236,46 +249,41 @@ export default function Friends() {
         {/* Friend Requests */}
         <div className="friend-requests-container">
           <h3>Friend Requests</h3>
-
-          {reqLoading ? (
-            <p>Loading...</p>
-          ) : reqError ? (
-            <p>Error: {reqError}</p>
-          ) : friendRequests.length === 0 ? (
-            <p>You have no pending friend requests.</p>
-          ) : (
-            <ul className="friend-requests-list">
-              {friendRequests.map((request) => (
-                <li key={request.id} className="friend-request-item">
-                  <img
-                    src={request.fromAvatar || DEFAULT_AVATAR}
-                    alt={request.fromName || "User"}
-                    onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
-                  />
-
-                  <span>{request.fromName || "Unknown"}</span>
-
-                  <div className="request-buttons">
-                    <button
-                      type="button"
-                      onClick={() => acceptRequest(request.id, request.from)}
-                      className="accept-btn"
-                    >
-                      Accept
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => declineRequest(request.id)}
-                      className="decline-btn"
-                    >
-                      Decline
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          {(() => {
+            if (reqLoading) return <p>Loading...</p>;
+            if (reqError) return <p>Error: {reqError}</p>;
+            if (friendRequests.length === 0) return <p>You have no pending friend requests.</p>;
+            return (
+              <ul className="friend-requests-list">
+                {friendRequests.map((request) => (
+                  <li key={request.id} className="friend-request-item">
+                    <img
+                      src={request.fromAvatar || DEFAULT_AVATAR}
+                      alt={request.fromName || "User"}
+                      onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
+                    />
+                    <span>{request.fromName || "Unknown"}</span>
+                    <div className="request-buttons">
+                      <button
+                        type="button"
+                        onClick={() => acceptRequest(request.id, request.from)}
+                        className="accept-btn"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => declineRequest(request.id)}
+                        className="decline-btn"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            );
+          })()}
         </div>
 
         {/* Friends list */}
