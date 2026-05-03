@@ -2,6 +2,10 @@
 /* ===================== */
 /* Message Input Styles  */
 /* ===================== */
+
+/* ===================== */
+/* Message Input Styles  */
+/* ===================== */
 .recording-notification {
   color: #ff5252;
   margin-bottom: 8px;
@@ -69,7 +73,7 @@
   border-radius: 8px;
   border: none;
   background: #e57373;
-  color: #fff;
+  color: #ffffff;
   font-weight: bold;
   cursor: pointer;
   font-size: 1rem;
@@ -112,7 +116,7 @@
 }
 .spoiler-send-btn {
   background: #e57373;
-  color: #fff;
+  color: #ffffff;
   margin-right: 8px;
 }
 .spoiler-send-btn:hover {

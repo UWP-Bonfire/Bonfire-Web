@@ -1,3 +1,5 @@
+
+/* ---------- Container ---------- */
 .account-container {
   background: linear-gradient(
     180deg,
@@ -13,6 +15,8 @@
   font-family: "Arial", sans-serif;
 }
 
+
+/* ---------- Title ---------- */
 .title {
   color: #3c2b23;
   font-size: 2rem;
@@ -20,6 +24,8 @@
   font-weight: 700;
 }
 
+
+/* ---------- Card ---------- */
 .account-card {
   background: var(--card-bg);
   display: flex;
@@ -33,6 +39,8 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+
+/* ---------- Sections ---------- */
 .left-section {
   display: flex;
   justify-content: center;
@@ -40,6 +48,8 @@
   flex: 1;
 }
 
+
+/* ---------- Avatar ---------- */
 .account-avatar {
   width: 120px;
   height: 120px;
@@ -49,6 +59,7 @@
   padding: 10px;
 }
 
+
 .right-section {
   flex: 2;
   display: flex;
@@ -56,11 +67,13 @@
   gap: 12px;
 }
 
+
 label {
   font-weight: bold;
   color: #3c2b23;
   margin-top: 5px;
 }
+
 
 input,
 textarea {
@@ -77,6 +90,7 @@ textarea {
   resize: none;
   height: 80px;
 }
+
 
 /* ---------- Buttons ---------- */
 .account-buttons {
@@ -107,47 +121,40 @@ textarea {
   text-align: center;
 }
 
-/* Default brown style */
+/* Button color variants */
 .btn.back,
 .btn.edit {
   background-color: #3c2b23;
   color: #fff;
 }
-
 .btn.back:hover,
 .btn.edit:hover {
   background-color: #5a3d31;
 }
-
-/* Change Info (beige tone) */
 .btn.info {
   background-color: #ffd9ba;
   color: #3c2b23;
 }
-
 .btn.info:hover {
   background-color: #f4b991;
 }
-
-/* Logout (red) */
 .btn.logout {
   background-color: #c84848;
   color: #fff;
 }
-
 .btn.logout:hover {
   background-color: #a93636;
   transform: translateY(-2px);
 }
 
-/* Responsive layout */
+
+/* ---------- Responsive layout ---------- */
 @media (max-width: 650px) {
   .account-buttons {
     flex-direction: column;
     align-items: center;
     gap: 14px;
   }
-
   .btn {
     width: 100%;
     max-width: 250px;
