@@ -28,7 +28,8 @@ const useChatSettings = () => {
                 await setDoc(chatRef, { 
                     limitNotifications: !currentStatus,
                     users: [user.uid, friendId],
-                    consecutiveUnread: { [user.uid]: 0, [friendId]: 0 }
+                    consecutiveUnread: { [user.uid]: 0, [friendId]: 0 },
+                    type: "individual"
                 });
             } else {
                 await updateDoc(chatRef, { limitNotifications: !currentStatus });

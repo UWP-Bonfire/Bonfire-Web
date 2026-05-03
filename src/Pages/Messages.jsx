@@ -17,6 +17,7 @@ import { useAuth } from "./hooks/useAuth";
 import useBlockUser from "./hooks/useBlockUser";
 import useChat from "./hooks/useChat";
 import useFriends from "./hooks/useFriends";
+import { useFavoritedChats } from "./hooks/useFavoritedChats";
 import "../Styles/messages.css";
 import useImageUpload from "./hooks/useImageUpload.js";
 import {
@@ -28,6 +29,9 @@ import {
   getDocs,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
+  updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import { firestore } from "../firebase.js";
@@ -696,7 +700,8 @@ export default function Messages() {
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
   const [groupDeleteError, setGroupDeleteError] = useState("");
 
-  // Memoized blocked user IDs
+  const { favoritedChats, toggleFavorite } = useFavoritedChats();
+
   const blockedIds = useMemo(() => new Set((blockedUsers || []).map((u) => u.id)), [blockedUsers]);
 
   // Memoized normalized friends list
@@ -974,6 +979,12 @@ export default function Messages() {
 
     const messagesEndRef = useRef(null);
 
+    const chatKey = isGroupChat ? friend.id : getDirectChatId(user.uid, friend.id);
+
+    const isPinned = favoritedChats.includes(chatKey);
+
+    const togglePinnedChat = () => toggleFavorite(chatKey);
+
 
 
     // 18+ group chat entry logic
@@ -1042,6 +1053,17 @@ export default function Messages() {
               {isGroupChat && <small>{memberCount} friend{memberCount === 1 ? "" : "s"} added</small>}
             </div>
           </div>
+
+          {!isGlobalChat && (
+            <button
+              type="button"
+              className={`favorite-chat-btn ${isPinned ? "pinned" : ""}`}
+              onClick={togglePinnedChat}
+              aria-label={isPinned ? "Unfavorite chat" : "Favorite chat"}
+            >
+              {isPinned ? "★ Favorited" : "☆ Favorite"}
+            </button>
+          )}
 
           {canDeleteGroup && (
             <button
