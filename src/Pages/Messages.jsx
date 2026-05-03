@@ -29,8 +29,8 @@ import {
   getDocs,
   deleteDoc,
   doc,
-  getDoc,
-  setDoc,
+  //getDoc,
+  //setDoc,
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -487,7 +487,7 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
             className={isRecording ? "voice-btn recording" : "voice-btn"}
             aria-label="Record voice message"
             onClick={async () => {
-              if (!isRecording) {
+            if (isRecording ? false : true) {
                 try {
                   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                   audioStreamRef.current = stream;
