@@ -29,8 +29,8 @@ import {
   getDocs,
   deleteDoc,
   doc,
-  getDoc,
-  setDoc,
+  //getDoc,
+  //setDoc,
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -487,7 +487,7 @@ const MessageInput = ({ onSendMessage, onSendImage, onSendVoice }) => {
             className={isRecording ? "voice-btn recording" : "voice-btn"}
             aria-label="Record voice message"
             onClick={async () => {
-              if (!isRecording) {
+            if (isRecording ? false : true) {
                 try {
                   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                   audioStreamRef.current = stream;
@@ -584,7 +584,6 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
   const [showSpoiler, setShowSpoiler] = useState(() => message.spoiler ? true : false);
 
   useEffect(() => {
-    // Reset spoiler state if message changes (e.g., new message sent)
     setShowSpoiler(message.spoiler ? true : false);
   }, [message.imageUrl, message.spoiler]);
 
@@ -598,6 +597,52 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  // Extracted: Render spoiler image block
+  function renderSpoilerImage() {
+    return (
+      <div className="spoiler-image-wrapper">
+        <img
+          src={message.imageUrl}
+          alt="Spoiler"
+          className={showSpoiler ? "message-image spoiler-blur" : "message-image"}
+        />
+        {showSpoiler && (
+          <div className="spoiler-overlay">
+            <span>This image is marked as a spoiler</span>
+            <button className="spoiler-reveal-btn" onClick={() => setShowSpoiler(false)}>
+              Reveal
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Extracted: Render checkmark
+  function renderCheckmark() {
+    if (!isGlobalChat && isSent && isLast) {
+      return message.read ? (
+        <span className="check blue"> ✓✓ </span>
+      ) : (
+        <span className="check gray"> ✓ </span>
+      );
+    }
+    return null;
+  }
+
+  let imageBlock = null;
+  if (message.imageUrl && message.spoiler) {
+    imageBlock = renderSpoilerImage();
+  } else if (message.imageUrl) {
+    imageBlock = (
+      <img
+        src={message.imageUrl}
+        alt="Sent"
+        className="message-image"
+      />
+    );
+  }
+
   return (
     <div className={`message-row ${isSent ? "sent" : "received"}`}>
       <img
@@ -609,31 +654,7 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
 
       <div className={`message-bubble ${message.audioUrl ? "audio-message-bubble" : ""}`}>
         <span className="msg-name">{isSent ? user.displayName || "You" : senderName}</span>
-
-        {message.imageUrl && message.spoiler ? (
-          <div className="spoiler-image-wrapper">
-            <img
-              src={message.imageUrl}
-              alt="Spoiler"
-              className={showSpoiler ? "message-image spoiler-blur" : "message-image"}
-            />
-            {showSpoiler && (
-              <div className="spoiler-overlay">
-                <span>This image is marked as a spoiler</span>
-                <button className="spoiler-reveal-btn" onClick={() => setShowSpoiler(false)}>
-                  Reveal
-                </button>
-              </div>
-            )}
-          </div>
-        ) : message.imageUrl ? (
-          <img
-            src={message.imageUrl}
-            alt="Sent"
-            className="message-image"
-          />
-        ) : null}
-
+        {imageBlock}
         {message.audioUrl && (
           <div className="message-audio big-audio-bubble">
             <audio
@@ -644,34 +665,24 @@ const MessageRow = ({ message, user, userProfiles, myAvatar, isLast, isGlobalCha
             />
           </div>
         )}
-
         {message.emoji && (
           <div className="message-emoji">{message.emoji}</div>
         )}
-
         {message.text && (
           <div className="message-text">{message.text}</div>
         )}
-
         <span className="msg-time">
           {formatTime(message.timestamp)}
-
-          {!isGlobalChat && isSent && isLast && (
-            <>
-              {message.read ? (
-                <span className="check blue"> ✓✓ </span>
-              ) : (
-                <span className="check gray"> ✓ </span>
-              )}
-            </>
-          )}
+          {renderCheckmark()}
         </span>
       </div>
     </div>
   );
 };
 
+
 export default function Messages() {
+  // State and hooks
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userProfile } = useAuth();
@@ -693,6 +704,7 @@ export default function Messages() {
 
   const blockedIds = useMemo(() => new Set((blockedUsers || []).map((u) => u.id)), [blockedUsers]);
 
+  // Memoized normalized friends list
   const normalizedFriends = useMemo(
     () =>
       (friends || [])

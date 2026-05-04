@@ -21,12 +21,14 @@ export default function Account() {
     );
   }
 
+
   const displayName = userProfile.displayName || "User12";
   const email = userProfile.email || auth?.currentUser?.email || "No email";
   const bio = userProfile.bio || "Welcome to Bonfire!";
-
   const avatar = userProfile.avatar || auth?.currentUser?.photoURL || DEFAULT_AVATAR;
 
+  const handleBack = () => navigate("/friends");
+  const handleEdit = () => navigate("/personalization");
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -41,41 +43,36 @@ export default function Account() {
   return (
     <div className="account-container">
       <h1 className="title">User Account</h1>
-
       <div className="account-card">
         <div className="left-section">
           <img
             src={avatar}
             alt="Profile"
             className="account-avatar"
-            onError={(e) => {
+            onError={e => {
               e.currentTarget.src = DEFAULT_AVATAR;
             }}
             referrerPolicy="no-referrer"
           />
         </div>
-
         <div className="right-section">
-          <label>Username</label>
-          <input type="text" value={displayName} readOnly />
+          <label htmlFor="account-username">Username</label>
+          <input id="account-username" type="text" value={displayName} readOnly />
 
-          <label>Email</label>
-          <input type="text" value={email} readOnly />
+          <label htmlFor="account-email">Email</label>
+          <input id="account-email" type="text" value={email} readOnly />
 
-          <label>Bio</label>
-          <textarea value={bio} readOnly />
+          <label htmlFor="account-bio">Bio</label>
+          <textarea id="account-bio" value={bio} readOnly />
         </div>
       </div>
-
       <div className="account-buttons">
-        <button className="btn back" onClick={() => navigate("/friends")}>
+        <button className="btn back" onClick={handleBack}>
           ← Back to Friends
         </button>
-
-        <button className="btn edit" onClick={() => navigate("/personalization")}>
+        <button className="btn edit" onClick={handleEdit}>
           ✎ Edit Profile
         </button>
-
         <button className="btn logout" onClick={handleLogout}>
           🚪 Log Out
         </button>

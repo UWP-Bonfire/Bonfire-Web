@@ -24,10 +24,7 @@ export default function Welcome() {
     }
   }, []);
 
-  // Toggle dark mode
-  const toggleDark = () => {
-    document.body.classList.toggle("dark");
-  };
+  // ...existing code...
 
   return (
     <div className="welcome-container">
@@ -42,11 +39,6 @@ export default function Welcome() {
         />
 
         <h1>Welcome to Bonfire</h1>
-
-        {/* Dark Mode Button */}
-        <button className="welcome-btn login" onClick={toggleDark}>
-          🌙 Toggle Dark Mode
-        </button>
 
         {/* Register / Sign In Buttons */}
         <div className="button-group">

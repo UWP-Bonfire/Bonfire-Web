@@ -30,7 +30,7 @@ export default function Personalization() {
         );
         const filteredUrls = urls.filter(url => !url.includes('logo.png'));
         setPresetAvatars(filteredUrls);
-        if (userProfile && userProfile.avatar) {
+        if (userProfile?.avatar) {
           setAvatar(userProfile.avatar);
         } else if (filteredUrls.length > 0) {
           setAvatar(filteredUrls[0]); 
@@ -109,16 +109,25 @@ export default function Personalization() {
         <div className="section">
           <h2>Choose Your Profile Picture</h2>
           <div className="avatar-options">
-            {presetAvatars.map((img, index) => (
-              <img
-                key={index}
-                src={img}
-                alt={`Avatar ${index + 1}`}
-                className={`avatar-choice ${
-                  avatar === img ? "selected-avatar" : ""
-                }`}
+            {presetAvatars.map((img) => (
+              <button
+                key={img}
+                type="button"
+                className={`avatar-choice ${avatar === img ? "selected-avatar" : ""}`}
                 onClick={() => setAvatar(img)}
-              />
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === " ") setAvatar(img);
+                }}
+                aria-label="Select avatar"
+                tabIndex={0}
+              >
+                <img
+                  src={img}
+                  alt="Avatar option"
+                  draggable={false}
+                  style={{ pointerEvents: "none" }}
+                />
+              </button>
             ))}
           </div>
         </div>
