@@ -101,7 +101,7 @@ export default function Friends() {
       const chatRef = doc(firestore, "chats", chatId);
       return onSnapshot(chatRef, (snap) => setLimitNotifications(friend, snap));
     };
-
+// Subscribe to all friends' chat docs for limitNotifications
     const unsubscribes = friends.map(subscribeLimitNotifications);
     return () => unsubscribes.forEach((u) => u());
   }, [friends, user]);
