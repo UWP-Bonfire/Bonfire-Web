@@ -704,19 +704,67 @@ export default function Messages() {
 
   const blockedIds = useMemo(() => new Set((blockedUsers || []).map((u) => u.id)), [blockedUsers]);
 
-  // Memoized normalized friends list
-  const normalizedFriends = useMemo(
-    () =>
-      (friends || [])
-        .map((f) => ({
-          ...f,
-          id: f.id || f.uid,
-          name: safeName(f),
-          avatar: safeAvatar(f),
-        }))
-        .filter((f) => !blockedIds.has(f.id)),
-    [friends, blockedIds]
-  );
+
+  // Memoized normalized friends list, sorted by recent message
+  const [recentFriendTimestamps, setRecentFriendTimestamps] = useState({});
+  const [recentGroupTimestamps, setRecentGroupTimestamps] = useState({});
+
+  // Listen for most recent message for each friend
+  useEffect(() => {
+    if (!user || !friends) return;
+    const unsubscribes = (friends || []).map((f) => {
+      const friendId = f.id || f.uid;
+      if (!friendId) return () => {};
+      const chatId = getDirectChatId(user.uid, friendId);
+      const messagesRef = collection(firestore, "chats", chatId, "messages");
+      const q = query(messagesRef, where("senderId", "in", [user.uid, friendId]));
+      return onSnapshot(q, (snapshot) => {
+        let latest = 0;
+        snapshot.forEach((doc) => {
+          const ts = doc.data().timestamp;
+          if (ts && ts.seconds && ts.seconds > latest) latest = ts.seconds;
+        });
+        setRecentFriendTimestamps((prev) => ({ ...prev, [friendId]: latest }));
+      });
+    });
+    return () => unsubscribes.forEach((u) => u());
+  }, [user, friends]);
+
+  // Listen for most recent message for each group chat
+  useEffect(() => {
+    if (!user || !groupChats) return;
+    const unsubscribes = (groupChats || []).map((g) => {
+      if (!g.id) return () => {};
+      const messagesRef = collection(firestore, "groupChats", g.id, "messages");
+      return onSnapshot(messagesRef, (snapshot) => {
+        let latest = 0;
+        snapshot.forEach((doc) => {
+          const ts = doc.data().timestamp;
+          if (ts && ts.seconds && ts.seconds > latest) latest = ts.seconds;
+        });
+        setRecentGroupTimestamps((prev) => ({ ...prev, [g.id]: latest }));
+      });
+    });
+    return () => unsubscribes.forEach((u) => u());
+  }, [user, groupChats]);
+
+  const normalizedFriends = useMemo(() => {
+    return (friends || [])
+      .map((f) => ({
+        ...f,
+        id: f.id || f.uid,
+        name: safeName(f),
+        avatar: safeAvatar(f),
+      }))
+      .filter((f) => !blockedIds.has(f.id))
+      .sort((a, b) => (recentFriendTimestamps[b.id] || 0) - (recentFriendTimestamps[a.id] || 0));
+  }, [friends, blockedIds, recentFriendTimestamps]);
+
+  const sortedGroupChats = useMemo(() => {
+    return (groupChats || [])
+      .slice()
+      .sort((a, b) => (recentGroupTimestamps[b.id] || 0) - (recentGroupTimestamps[a.id] || 0));
+  }, [groupChats, recentGroupTimestamps]);
 
   useEffect(() => {
     if (!user) {
@@ -1153,8 +1201,8 @@ export default function Messages() {
 
               {groupChatsLoading ? (
                 <div className="group-chat-empty-state">Loading group chats...</div>
-              ) : groupChats.length > 0 ? (
-                groupChats.map((group) => (
+              ) : sortedGroupChats.length > 0 ? (
+                sortedGroupChats.map((group) => (
                   <div
                     className={`dm ${selectedFriend?.id === group.id ? "active" : ""}`}
                     key={group.id}
