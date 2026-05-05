@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Hooks
 import useFriends from "./hooks/useFriends";
@@ -24,9 +24,9 @@ import MessageIcon from "../assets/images/message.png";
 
 const DEFAULT_AVATAR = DefaultAvatar;
 
-
 export default function Friends() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Hooks
   const { friends, loading, error, unfriend, muteUser, unmuteUser } = useFriends();
@@ -47,6 +47,35 @@ export default function Friends() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeOptionsMenu, setActiveOptionsMenu] = useState(null);
   const [chatLimits, setChatLimits] = useState({});
+  // For sorting by recent message
+  const [recentTimestamps, setRecentTimestamps] = useState({});
+  const [refreshKey, setRefreshKey] = useState(0);
+  // Track most recent message timestamp for each friend
+  useEffect(() => {
+    if (!user || friends.length === 0) return;
+    const unsubscribes = friends.map((f) => {
+      const friendId = f.id;
+      if (!friendId) return () => {};
+      const chatId = [user.uid, friendId].sort((a, b) => a.localeCompare(b)).join("_");
+      const messagesRef = collection(firestore, "chats", chatId, "messages");
+      return onSnapshot(messagesRef, (snapshot) => {
+        let latest = 0;
+        snapshot.forEach((doc) => {
+          const ts = doc.data().timestamp;
+          if (ts && ts.seconds && ts.seconds > latest) latest = ts.seconds;
+        });
+        setRecentTimestamps((prev) => ({ ...prev, [friendId]: latest }));
+      });
+    });
+    return () => unsubscribes.forEach((u) => u());
+  }, [user, friends]);
+
+  // When coming back from messages.jsx, force a refresh to re-sort by recent message
+  useEffect(() => {
+    if (location.state && location.state.fromMessages) {
+      setRefreshKey((k) => k + 1);
+    }
+  }, [location.state]);
 
 
   // Request notification permission on mount
@@ -72,7 +101,7 @@ export default function Friends() {
       const chatRef = doc(firestore, "chats", chatId);
       return onSnapshot(chatRef, (snap) => setLimitNotifications(friend, snap));
     };
-
+// Subscribe to all friends' chat docs for limitNotifications
     const unsubscribes = friends.map(subscribeLimitNotifications);
     return () => unsubscribes.forEach((u) => u());
   }, [friends, user]);
@@ -156,13 +185,15 @@ export default function Friends() {
   if (loading) return <div>Loading friends...</div>;
   if (error) return <div>{error}</div>;
 
-  // Filter and sort friends (hide blocked, sort by unread count)
+  // Filter and sort friends (hide blocked, sort by recent message, then unread count, then name)
   const visibleFriends = friends
     .filter((f) => !blockedUsers.some(user => user.id === f.id))
     .sort((a, b) => {
+      const recentA = recentTimestamps[a.id] || 0;
+      const recentB = recentTimestamps[b.id] || 0;
+      if (recentB !== recentA) return recentB - recentA;
       const unreadA = unreadCounts[a.id] || 0;
       const unreadB = unreadCounts[b.id] || 0;
-      // Sort by unread count descending, then by name ascending for stability
       if (unreadB !== unreadA) return unreadB - unreadA;
       return (a.name || '').localeCompare(b.name || '');
     });
@@ -175,7 +206,7 @@ export default function Friends() {
       {/* Sidebar */}
       <div className="sidebar">
         <h2>Direct Messages</h2>
-        <div className="dm-list">
+        <div className="dm-list" key={refreshKey}>
           {visibleFriends.map((friend) => (
             <div className="dm" key={friend.id} onClick={() => handleChatClick(friend.id)}>
               <div className="dm-avatar">
