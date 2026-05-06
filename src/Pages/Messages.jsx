@@ -50,7 +50,7 @@ const CHAT_TYPES = {
 const CHAT_FILTERS = [
   { key: "individual", label: "Individual" },
   { key: "group", label: "Group" },
-  { key: "global", label: "Global" },
+  { key: "eighteenPlus", label: "18+" },
   { key: "favorites", label: "Favorites" },
 ];
 
@@ -774,13 +774,6 @@ export default function Messages() {
       .sort((a, b) => (recentGroupTimestamps[b.id] || 0) - (recentGroupTimestamps[a.id] || 0));
   }, [groupChats, recentGroupTimestamps]);
 
-  const globalChatItem = useMemo(() => ({
-    id: CHAT_TYPES.GLOBAL,
-    type: CHAT_TYPES.GLOBAL,
-    name: "Global Chat Room",
-    avatar: GLOBAL_ICON,
-  }), []);
-
   const favoritedFriendChats = useMemo(() => {
     if (!user) return [];
     return normalizedFriends.filter((friend) => {
@@ -794,19 +787,24 @@ export default function Messages() {
     [sortedGroupChats, favoritedChats]
   );
 
+  const eighteenPlusChats = useMemo(
+    () => sortedGroupChats.filter((group) => group.is18Plus),
+    [sortedGroupChats]
+  );
+
   const filteredChatItems = useMemo(() => {
     switch (chatFilter) {
       case "group":
         return sortedGroupChats;
-      case "global":
-        return [globalChatItem];
+      case "eighteenPlus":
+        return eighteenPlusChats;
       case "favorites":
         return [...favoritedFriendChats, ...favoritedGroupChats];
       case "individual":
       default:
         return normalizedFriends;
     }
-  }, [chatFilter, normalizedFriends, sortedGroupChats, globalChatItem, favoritedFriendChats, favoritedGroupChats]);
+  }, [chatFilter, normalizedFriends, sortedGroupChats, favoritedFriendChats, favoritedGroupChats, eighteenPlusChats]);
 
   useEffect(() => {
     if (!user) {
