@@ -47,6 +47,13 @@ const CHAT_TYPES = {
   GLOBAL: "global",
 };
 
+const CHAT_FILTERS = [
+  { key: "individual", label: "Individual" },
+  { key: "group", label: "Group" },
+  { key: "eighteenPlus", label: "18+" },
+  { key: "favorites", label: "Favorites" },
+];
+
 const safeName = (obj) => obj?.name || obj?.username || obj?.displayName || "Anonymous";
 const safeAvatar = (obj) => obj?.avatar || obj?.profileImage || DEFAULT_PFP;
 const getDirectChatId = (uid1, uid2) => [uid1, uid2].sort((left, right) => left.localeCompare(right)).join("_");
@@ -699,6 +706,7 @@ export default function Messages() {
   const [groupCreateError, setGroupCreateError] = useState("");
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
   const [groupDeleteError, setGroupDeleteError] = useState("");
+  const [chatFilter, setChatFilter] = useState("individual");
 
   const { favoritedChats, toggleFavorite } = useFavoritedChats();
 
@@ -765,6 +773,38 @@ export default function Messages() {
       .slice()
       .sort((a, b) => (recentGroupTimestamps[b.id] || 0) - (recentGroupTimestamps[a.id] || 0));
   }, [groupChats, recentGroupTimestamps]);
+
+  const favoritedFriendChats = useMemo(() => {
+    if (!user) return [];
+    return normalizedFriends.filter((friend) => {
+      const chatKey = getDirectChatId(user.uid, friend.id);
+      return favoritedChats.includes(chatKey);
+    });
+  }, [normalizedFriends, favoritedChats, user]);
+
+  const favoritedGroupChats = useMemo(
+    () => sortedGroupChats.filter((group) => favoritedChats.includes(group.id)),
+    [sortedGroupChats, favoritedChats]
+  );
+
+  const eighteenPlusChats = useMemo(
+    () => sortedGroupChats.filter((group) => group.is18Plus),
+    [sortedGroupChats]
+  );
+
+  const filteredChatItems = useMemo(() => {
+    switch (chatFilter) {
+      case "group":
+        return sortedGroupChats;
+      case "eighteenPlus":
+        return eighteenPlusChats;
+      case "favorites":
+        return [...favoritedFriendChats, ...favoritedGroupChats];
+      case "individual":
+      default:
+        return normalizedFriends;
+    }
+  }, [chatFilter, normalizedFriends, sortedGroupChats, favoritedFriendChats, favoritedGroupChats, eighteenPlusChats]);
 
   useEffect(() => {
     if (!user) {
@@ -1167,68 +1207,65 @@ export default function Messages() {
         </button>
         <h2>Messages</h2>
 
+        <div className="chat-filter-buttons">
+          {CHAT_FILTERS.map((filter) => (
+            <button
+              key={filter.key}
+              type="button"
+              className={`chat-filter-button ${chatFilter === filter.key ? "active" : ""}`}
+              onClick={() => setChatFilter(filter.key)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
         <div className="dm-list">
-          {friendsLoading ? (
+          {friendsLoading && chatFilter === "individual" ? (
             <div>Loading friends...</div>
+          ) : groupChatsLoading && chatFilter === "group" ? (
+            <div className="group-chat-empty-state">Loading group chats...</div>
+          ) : filteredChatItems.length === 0 ? (
+            <div className="group-chat-empty-state">No chats in this category.</div>
           ) : (
-            <>
-              {normalizedFriends.map((friend) => (
+            filteredChatItems.map((item) => {
+              const isGroupChat = item.type === CHAT_TYPES.GROUP;
+              const isGlobalChat = item.type === CHAT_TYPES.GLOBAL;
+              const chatId = item.id;
+              const isActive = selectedFriend?.id === item.id;
+
+              return (
                 <div
-                  className={`dm ${selectedFriend?.id === friend.id ? "active" : ""}`}
-                  key={friend.id}
-                  onClick={() => setSelectedFriend(friend)}
+                  className={`dm ${isActive ? "active" : ""}`}
+                  key={item.id}
+                  onClick={() => setSelectedFriend(item)}
                   tabIndex={0}
                   role="button"
-                  aria-label={`Open chat with ${friend.name}`}
-                  onKeyDown={e => {
+                  aria-label={isGlobalChat ? "Open global chat" : isGroupChat ? `Open group chat ${item.name}` : `Open chat with ${item.name}`}
+                  onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
-                      setSelectedFriend(friend);
+                      setSelectedFriend(item);
                     }
                   }}
                 >
                   <img
-                    src={friend.avatar}
-                    alt={friend.name}
-                    onError={(e) => (e.currentTarget.src = DEFAULT_PFP)}
+                    src={item.avatar || (isGroupChat ? DEFAULT_GROUP_ICON : DEFAULT_PFP)}
+                    alt={item.name}
+                    onError={(e) => {
+                      e.currentTarget.src = isGroupChat ? DEFAULT_GROUP_ICON : DEFAULT_PFP;
+                    }}
                   />
-                  <span>{friend.name}</span>
+                  <div className={isGroupChat ? "group-chat-sidebar-copy" : undefined}>
+                    <span>{item.name}</span>
+                    {isGroupChat && <small>{Math.max((item.memberIds?.length || 1) - 1, 0)} friends</small>}
+                  </div>
 
-                  {unreadCounts[friend.id] > 0 && !friend.isMuted && (
-                    <span className="unread-count">{unreadCounts[friend.id]}</span>
+                  {!isGroupChat && !isGlobalChat && unreadCounts[item.id] > 0 && !item.isMuted && (
+                    <span className="unread-count">{unreadCounts[item.id]}</span>
                   )}
                 </div>
-              ))}
-
-              {groupChatsLoading ? (
-                <div className="group-chat-empty-state">Loading group chats...</div>
-              ) : sortedGroupChats.length > 0 ? (
-                sortedGroupChats.map((group) => (
-                  <div
-                    className={`dm ${selectedFriend?.id === group.id ? "active" : ""}`}
-                    key={group.id}
-                    onClick={() => setSelectedFriend(group)}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Open group chat ${group.name}`}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        setSelectedFriend(group);
-                      }
-                    }}
-                  >
-                    <img
-                      src={group.avatar || DEFAULT_GROUP_ICON}
-                      alt={group.name}
-                      onError={(e) => (e.currentTarget.src = DEFAULT_GROUP_ICON)}
-                    />
-                    <div className="group-chat-sidebar-copy">
-                      <span>{group.name}</span>
-                      <small>{Math.max((group.memberIds?.length || 1) - 1, 0)} friends</small>
-                    </div>
-                  </div>
-                ))
-              ) : null}
-            </>
+              );
+            })
           )}
         </div>
 
